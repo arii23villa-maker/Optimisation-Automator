@@ -29,7 +29,14 @@ Agent 1  Extract ──► Agent 7  Maker (free first draft)
 | 8 · Verification gate | Approves only when all five gates pass, no forbidden phrase is used, and every figure and claim traces back to the source page or approved product facts. |
 | 9 · Orchestrator | Runs the loop, keeps scores consistent, streams progress to the UI. |
 
-More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+More detail:
+
+| Doc | What it covers |
+|---|---|
+| [docs/PROJECT-BIBLE.md](docs/PROJECT-BIBLE.md) | What the tool is, its principles, agents, routing, decisions, glossary |
+| [docs/HANDOFF.md](docs/HANDOFF.md) | Current status, blockers and the exact next steps |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Technical flow, router, logging, API, streaming |
+| [docs/BAJAJ-VERTICALS.md](docs/BAJAJ-VERTICALS.md) | Built-in guideline presets per vertical |
 
 ## Quick start
 
@@ -152,7 +159,7 @@ src/
   theme.css                   Generated colour system (light default, dark toggle)
 tests/                        node:test suites
 scripts/                      e2e-bajaj.ts, build-theme.mjs
-docs/                         Architecture, verticals, E2E report
+docs/                         Project bible, handoff, architecture, verticals, E2E report and outputs
 scraper.py                    Standalone Python scraper (not used by the app)
 ```
 
@@ -162,7 +169,7 @@ scraper.py                    Standalone Python scraper (not used by the app)
   token**: earlier versions of this code had them hard-coded.
 - The server only fetches public `http(s)` URLs; private/internal addresses are refused (use Paste HTML instead).
 - CORS is closed by default (`ALLOWED_ORIGINS` to open it).
-- There is no authentication: deploy behind the company SSO/VPN.
+- The tool itself has no login (only `/admin` is password-protected): deploy behind the company SSO/VPN.
 
 ## Known limitations
 

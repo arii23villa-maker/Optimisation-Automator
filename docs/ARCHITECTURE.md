@@ -97,7 +97,7 @@ Admin API (header `x-admin-password`; 10 wrong attempts per IP per 15 minutes ar
 
 ## Gates
 
-| Gate | Deterministic checks | LLM checks (needs Gemini) |
+| Gate | Deterministic checks | LLM checks (Groq first, Gemini backup) |
 |---|---|---|
 | 2 Compliance | Forbidden phrases (gating), core value propositions present | Guideline violations in copy |
 | 3 SEO backend | Title/description length and completeness, brand in title/description (when a brand is set), JSON-LD validity, completeness and canonical order, sitemap | — |
@@ -164,6 +164,7 @@ or a final `{"type":"error","error":"…"}`.
 | POST | `/api/run-pipeline` | Optimize or revise (see above) |
 | POST | `/api/optimize-h2s` | H2 rewrite suggestions (H2 optimizer modal) |
 | GET/POST | `/api/google-ads/*` | Keyword Planner status, metrics, ideas |
+| POST / GET | `/api/admin/login`, `/api/admin/metrics` | Admin panel (see above) |
 
 ## UI theme
 
@@ -176,5 +177,8 @@ scales. The theme is stored in `localStorage` (`co-theme`) and applied before fi
 
 - `npm test`: unit tests for the keyword picker and draft model, and pipeline tests that run the real gates,
   verification and revision loop against a scripted model client (`setAgentAIClientForTesting`).
-- `npm run test:e2e`: live Bajaj Finserv pages through the running server; writes `docs/E2E-REPORT.md`. With
-  `GEMINI_API_KEY` it also covers maker drafts, the gate loop and a scoped revision.
+- `npm test` also runs the router tests (`tests/llm.test.ts`, mocked Groq HTTP): routing order, fallback, rate-limit
+  retry, pre-flight skip, bad JSON and usage logging.
+- `npm run test:e2e`: 9 live Bajaj Finserv pages (3 products, 3 blogs, 3 articles) through the running server;
+  writes `docs/E2E-REPORT.md` and per-page before/after content in `docs/e2e-outputs/`. With a working Gemini key it
+  also covers maker drafts, the gate loop and a scoped revision.

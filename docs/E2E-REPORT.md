@@ -1,5 +1,9 @@
 # End-to-end test report — Bajaj Finserv pages
 
+> **Stale (kept for reference).** This run predates the Gemini + Groq router, the 9-page test set and the gate
+> quality fixes. It covered only the deterministic parts on 6 pages. The next run of `scripts/e2e-bajaj.ts`, after the
+> new Gemini key is in place, overwrites this file. See [HANDOFF.md](HANDOFF.md).
+
 Run: 2026-10-20T08:35:33.137Z against `http://localhost:3000`
 
 Integrations: Gemini **not configured**, Firecrawl **configured**, Google Ads **not configured**.

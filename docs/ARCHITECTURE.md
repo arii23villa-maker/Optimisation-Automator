@@ -58,6 +58,43 @@ scope are sent to the maker, together with a scope instruction, and the result i
 
 If the content already passes, or no notes apply to the scope, nothing is changed and the report explains why.
 
+## LLM router (`src/services/llm.ts`)
+
+Every model call names a **job** (`maker`, `extraction`, `gate-compliance`, `gate-customer`, `gate-eeat-geo`,
+`verify-fidelity`, `keywords`, `h2-optimizer`). `routeFor(job)` returns the ordered provider/model choices; long-input
+jobs go Gemini first, short checks go Groq first. For each choice:
+
+| Outcome | Action |
+|---|---|
+| Success (and valid JSON when `json: true`) | Return; log tokens, latency, estimated cost |
+| Rate limit, wait ≤ 20 s | Wait, retry the same model once |
+| Server error | Retry once, then next choice |
+| Auth / permission / model not found | Next choice; pause this model for 10 minutes |
+| Request larger than Groq's per-minute token limit | Skipped before sending (logged as "skipped") |
+| Unparseable JSON | Next choice |
+
+Calls inside a pipeline run carry the run id and page URL (AsyncLocalStorage), so the admin panel can attribute cost
+to runs. Groq's quota headers (requests per day, tokens per minute) are kept in memory for the panel.
+
+LLM gates ask each finding for `quote`, `rule` and `needsInfoNotOnPage`. A finding is only critical (blocking) when it
+quotes the text and names the rule; anything that needs information not on the page is downgraded to low. Gates see
+a full heading outline plus the first 12,000 characters, and are told not to report sections as missing when the
+outline shows them.
+
+## Usage logging and admin metrics
+
+`usageStore.ts` appends JSON lines to `data/usage/` (`USAGE_LOG_DIR`): `llm-calls.jsonl` (one line per attempt),
+`firecrawl.jsonl` and `runs.jsonl`. `adminMetrics.ts` aggregates them on request (7-day and all-time totals, daily
+series, rate-limit reasons, job × provider matrix, failures, fallbacks, Firecrawl, runs). Firecrawl's remaining credits
+come live from `GET https://api.firecrawl.dev/v2/team/credit-usage` (cached 5 minutes).
+
+Admin API (header `x-admin-password`; 10 wrong attempts per IP per 15 minutes are blocked):
+
+| Method | Path | Purpose |
+|---|---|---|
+| POST | `/api/admin/login` | Check the password |
+| GET | `/api/admin/metrics` | Everything the panel shows |
+
 ## Gates
 
 | Gate | Deterministic checks | LLM checks (needs Gemini) |

@@ -121,8 +121,8 @@
     min-width: 7.5rem;
     overflow-wrap: normal;
   }
-  .flex.items-center[class*="space-x-"],
-  .flex.items-center[class*="gap-"]:not(nav *):not(button) {
+  .flex.items-center[class*="space-x-"]:not(.no-wrap),
+  .flex.items-center[class*="gap-"]:not(nav *):not(button):not(.no-wrap) {
     flex-wrap: wrap;
     row-gap: 0.5rem;
   }

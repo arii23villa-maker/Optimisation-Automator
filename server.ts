@@ -7,6 +7,10 @@ import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import * as cheerio from "cheerio";
 import { runAgent9OrchestrationPipeline } from "./src/services/agentPipeline";
+import { generate as generateLlm, extractJson, llmAvailable, configuredProviders, type LlmJob } from "./src/services/llm";
+import { recordFirecrawl, recordRun } from "./src/services/usageStore";
+import { computeAdminMetrics } from "./src/services/adminMetrics";
+import crypto from "crypto";
 import { pickKeywords } from "./src/services/keywordPicker";
 import {
   sanitizeGrammarAndPunctuation,
@@ -61,33 +65,13 @@ app.get("/api/health", (_req, res) => {
     status: "ok",
     timestamp: new Date().toISOString(),
     integrations: {
-      gemini: !!(process.env.GEMINI_API_KEY || process.env.API_KEY || process.env.GOOGLE_API_KEY || process.env.GEMINI_KEY || "").trim(),
+      gemini: configuredProviders().gemini,
+      groq: configuredProviders().groq,
       firecrawl: !!(process.env.FIRECRAWL_API_KEY || "").trim(),
       googleAds: isGoogleAdsConfigured(),
     },
   });
 });
-
-// Helper: Retrieve Gemini API Key from Secrets / Environment
-const getGeminiApiKey = (): string => {
-  return (
-    process.env.GEMINI_API_KEY ||
-    process.env.API_KEY ||
-    process.env.GOOGLE_API_KEY ||
-    process.env.GEMINI_KEY ||
-    ""
-  ).trim();
-};
-
-// Initialize Google Gen AI
-const getAIClient = () => {
-  const apiKey = getGeminiApiKey();
-  if (!apiKey) {
-    return null;
-  }
-  return new GoogleGenAI({ apiKey });
-};
-
 
 // ---------------------------------------------------------------------------
 // 1. PAGE DOMAIN & CONTEXT DETECTOR (Domain Understanding & Layman Context)
@@ -273,67 +257,27 @@ function extractKeywordsAlgorithmic(params: {
   });
 }
 
-// Helper: Resilient, High-Speed Gemini caller with fast fallback
+// JSON model call through the router (Groq + Gemini with fallback and usage logging).
 async function callGeminiWithRetry(options: {
+  job: LlmJob;
   contents: string;
   responseSchema?: any;
-  systemInstruction?: string;
   timeoutMs?: number;
+  expect?: 'array' | 'object';
 }) {
-  const ai = getAIClient();
-  if (!ai) {
-    throw new Error("GEMINI_API_KEY environment variable is not configured.");
+  const res = await generateLlm({
+    job: options.job,
+    prompt: options.contents,
+    json: true,
+    responseSchema: options.responseSchema,
+    timeoutMs: options.timeoutMs || 30000,
+  });
+  const parsed = extractJson(res.text);
+  if (options.expect === 'array' && parsed && !Array.isArray(parsed) && typeof parsed === 'object') {
+    const arr = Object.values(parsed).find((v) => Array.isArray(v));
+    if (arr) return arr;
   }
-
-  // Use fastest, high-capability models
-  const candidateModels = Array.from(new Set([
-    (process.env.GEMINI_MODEL || "gemini-3.8-flash").trim(),
-    (process.env.GEMINI_FALLBACK_MODEL || "gemini-2.5-flash").trim(),
-  ]));
-  let lastError: any = null;
-  const timeoutMs = options.timeoutMs || 8000;
-
-  for (const model of candidateModels) {
-    try {
-      const config: any = {
-        responseMimeType: "application/json",
-      };
-      if (options.responseSchema) {
-        config.responseSchema = options.responseSchema;
-      }
-      if (options.systemInstruction) {
-        config.systemInstruction = options.systemInstruction;
-      }
-
-      // Execute with timeout race
-      const apiCallPromise = ai.models.generateContent({
-        model,
-        contents: options.contents,
-        config,
-      });
-
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms on ${model}`)), timeoutMs)
-      );
-
-      const response: any = await Promise.race([apiCallPromise, timeoutPromise]);
-
-      let text = response.text?.trim();
-      if (text) {
-        if (text.startsWith("```json")) {
-          text = text.replace(/^```json\s*/i, "").replace(/```\s*$/, "").trim();
-        } else if (text.startsWith("```")) {
-          text = text.replace(/^```\s*/, "").replace(/```\s*$/, "").trim();
-        }
-        return JSON.parse(text);
-      }
-    } catch (err: any) {
-      lastError = err;
-      console.warn(`Gemini call on ${model} failed (${err.message}). Moving to next...`);
-    }
-  }
-
-  throw lastError || new Error("All Gemini model attempts exhausted.");
+  return parsed;
 }
 
 // Helper: Convert Markdown from Jina or web reader proxies into structured HTML
@@ -463,12 +407,34 @@ async function scrapeWithFirecrawl(targetUrl: string): Promise<FirecrawlScrapeRe
   return result;
 }
 
+/** Firecrawl request with usage logging for the admin panel. */
+async function firecrawlFetch(kind: "scrape" | "map", target: string, endpoint: string, init: RequestInit): Promise<Response> {
+  const started = Date.now();
+  try {
+    const res = await fetch(endpoint, init);
+    recordFirecrawl({
+      ts: new Date().toISOString(),
+      kind,
+      url: target,
+      ok: res.ok,
+      status: res.status,
+      credits: res.ok ? 1 : 0,
+      latencyMs: Date.now() - started,
+      error: res.ok ? undefined : `HTTP ${res.status}`,
+    });
+    return res;
+  } catch (err: any) {
+    recordFirecrawl({ ts: new Date().toISOString(), kind, url: target, ok: false, credits: 0, latencyMs: Date.now() - started, error: String(err?.message || err).slice(0, 200) });
+    throw err;
+  }
+}
+
 async function scrapeWithFirecrawlInner(targetUrl: string, reportHttpError: (code: number) => void): Promise<FirecrawlScrapeResult | null> {
   let httpError = 0;
   try {
     console.info(`[Agent 1: Firecrawl Scraper] Initiating headless scrape for: ${targetUrl}`);
     // Priority 1: onlyMainContent: true extracts pure document body from H1 to FAQs without navigation boilerplate
-    const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+    const res = await firecrawlFetch("scrape", targetUrl, "https://api.firecrawl.dev/v1/scrape", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${FIRECRAWL_API_KEY}`,
@@ -513,7 +479,7 @@ async function scrapeWithFirecrawlInner(targetUrl: string, reportHttpError: (cod
       console.warn(`[Agent 1: Firecrawl Scraper] Firecrawl API returned HTTP ${res.status}:`, errText);
       // Secondary attempt with onlyMainContent: false if strict mode returned nothing
       try {
-        const retryRes = await fetch("https://api.firecrawl.dev/v1/scrape", {
+        const retryRes = await firecrawlFetch("scrape", targetUrl, "https://api.firecrawl.dev/v1/scrape", {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${FIRECRAWL_API_KEY}`,
@@ -555,7 +521,7 @@ async function mapWithFirecrawl(targetUrl: string): Promise<string[]> {
   if (!FIRECRAWL_API_KEY) return [];
   try {
     console.info(`[Agent 1: Firecrawl] Mapping URLs for domain: ${targetUrl}`);
-    const res = await fetch("https://api.firecrawl.dev/v1/map", {
+    const res = await firecrawlFetch("map", targetUrl, "https://api.firecrawl.dev/v1/map", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${FIRECRAWL_API_KEY}`,
@@ -2243,7 +2209,7 @@ app.post("/api/extract-keywords", async (req, res) => {
     });
 
     // Optionally refine with Gemini if available with a tight 3s timeout
-    if (getGeminiApiKey()) {
+    if (llmAvailable()) {
       const kwPrompt = `
 Pick 6 to 8 target keywords this page is targeting, for Google Search, voice search (AEO) and AI answer engines (GEO).
 Rules:
@@ -2269,6 +2235,8 @@ Return strict JSON array of objects with fields: id, keyword, searchVolume, inte
 `;
       try {
         const aiKeywords = await callGeminiWithRetry({
+          job: 'keywords',
+          expect: 'array',
           contents: kwPrompt,
           timeoutMs: 15000,
           responseSchema: {
@@ -2393,6 +2361,7 @@ Return STRICT JSON array of objects according to the schema.
 `;
 
     const result = await callGeminiWithRetry({
+      job: 'h2-optimizer',
       contents: prompt,
       responseSchema: {
         type: Type.OBJECT,
@@ -2508,8 +2477,12 @@ app.post(["/api/run-pipeline", "/api/orchestrate"], async (req, res) => {
     res.flushHeaders?.();
   }
 
+  const runStarted = Date.now();
+  const runId = `run-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const runPageUrl = url || backendData?.canonicalUrl;
   try {
     const pipelineResult = await runAgent9OrchestrationPipeline({
+      runId,
       url,
       rawHtml,
       productGuidelines,
@@ -2580,6 +2553,19 @@ app.post(["/api/run-pipeline", "/api/orchestrate"], async (req, res) => {
         }
       : null;
 
+    recordRun({
+      ts: new Date().toISOString(),
+      runId,
+      pageUrl: runPageUrl,
+      mode: mode === "revise" ? "revise" : "optimize",
+      scope: reviseScope?.kind,
+      verdict: pipelineResult.finalVerdict,
+      drafts: pipelineResult.report.rounds?.length || 0,
+      durationMs: Date.now() - runStarted,
+      scoreBefore: pipelineResult.beforeScores?.overallScore,
+      scoreAfter: pipelineResult.afterScores?.overallScore,
+    });
+
     const payload = {
       success: true,
       fixResult,
@@ -2622,11 +2608,102 @@ app.post(["/api/run-pipeline", "/api/orchestrate"], async (req, res) => {
   } catch (err: any) {
     console.error("Error in /api/run-pipeline orchestration:", err);
     const message = err?.message || "Pipeline failed";
+    recordRun({
+      ts: new Date().toISOString(),
+      runId,
+      pageUrl: runPageUrl,
+      mode: mode === "revise" ? "revise" : "optimize",
+      scope: reviseScope?.kind,
+      drafts: 0,
+      durationMs: Date.now() - runStarted,
+      error: String(message).slice(0, 300),
+    });
     if (streaming) {
       send({ type: "error", error: message });
       return res.end();
     }
     return res.status(500).json({ error: message, status: 500 });
+  }
+});
+
+// ----------------------------------------------------
+// ADMIN PANEL API (password: ADMIN_PASSWORD in .env)
+// ----------------------------------------------------
+const adminPassword = () => (process.env.ADMIN_PASSWORD || "").trim();
+const sha = (v: string) => crypto.createHash("sha256").update(v).digest();
+const passwordMatches = (given: unknown) =>
+  typeof given === "string" && !!adminPassword() && crypto.timingSafeEqual(sha(given), sha(adminPassword()));
+
+// Simple brute-force brake: 10 wrong passwords per IP per 15 minutes.
+const adminFailures = new Map<string, { count: number; since: number }>();
+function adminGuard(req: express.Request, res: express.Response): boolean {
+  if (!adminPassword()) {
+    res.status(503).json({ error: "The admin panel is disabled. Set ADMIN_PASSWORD in .env and restart the server." });
+    return false;
+  }
+  const ip = req.ip || "unknown";
+  const f = adminFailures.get(ip);
+  if (f && f.count >= 10 && Date.now() - f.since < 15 * 60 * 1000) {
+    res.status(429).json({ error: "Too many wrong passwords. Try again in 15 minutes." });
+    return false;
+  }
+  const given = req.get("x-admin-password") ?? req.body?.password;
+  if (!passwordMatches(given)) {
+    const cur = f && Date.now() - f.since < 15 * 60 * 1000 ? f : { count: 0, since: Date.now() };
+    cur.count++;
+    adminFailures.set(ip, cur);
+    res.status(401).json({ error: "Wrong admin password." });
+    return false;
+  }
+  adminFailures.delete(ip);
+  return true;
+}
+
+let firecrawlCreditCache: { at: number; value: any; error?: string } | null = null;
+async function firecrawlCredits(): Promise<{ value: any; error?: string }> {
+  if (firecrawlCreditCache && Date.now() - firecrawlCreditCache.at < 5 * 60 * 1000) return firecrawlCreditCache;
+  if (!FIRECRAWL_API_KEY) return { value: null, error: "FIRECRAWL_API_KEY is not set" };
+  try {
+    const r = await fetch("https://api.firecrawl.dev/v2/team/credit-usage", {
+      headers: { Authorization: `Bearer ${FIRECRAWL_API_KEY}` },
+      signal: AbortSignal.timeout(10000),
+    });
+    const j: any = await r.json().catch(() => ({}));
+    if (!r.ok || !j?.data) throw new Error(j?.error || `HTTP ${r.status}`);
+    firecrawlCreditCache = {
+      at: Date.now(),
+      value: { remaining: j.data.remainingCredits, plan: j.data.planCredits, periodStart: j.data.billingPeriodStart, periodEnd: j.data.billingPeriodEnd },
+    };
+  } catch (err: any) {
+    firecrawlCreditCache = { at: Date.now(), value: null, error: String(err?.message || err) };
+  }
+  return firecrawlCreditCache;
+}
+
+app.post("/api/admin/login", (req, res) => {
+  if (!adminGuard(req, res)) return;
+  res.json({ ok: true });
+});
+
+app.get("/api/admin/metrics", async (req, res) => {
+  if (!adminGuard(req, res)) return;
+  try {
+    const fc = await firecrawlCredits();
+    res.setHeader("Cache-Control", "no-store");
+    res.json(
+      computeAdminMetrics({
+        firecrawlLive: fc.value,
+        firecrawlError: fc.error,
+        integrations: {
+          gemini: configuredProviders().gemini,
+          groq: configuredProviders().groq,
+          firecrawl: !!FIRECRAWL_API_KEY,
+          googleAds: isGoogleAdsConfigured(),
+        },
+      })
+    );
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || "Could not compute metrics" });
   }
 });
 

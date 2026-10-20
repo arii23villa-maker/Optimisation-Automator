@@ -1,4 +1,5 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { Type } from "@google/genai";
+import { generate, extractJson, llmAvailable, routeFor, runContext, setTestClient, type LlmJob } from "./llm";
 import * as cheerio from "cheerio";
 import { 
   ExtractedPageData, 
@@ -152,66 +153,48 @@ export function normalizeStructureMappingGuidelines(s?: Partial<StructureMapping
   };
 }
 
-// Helper to retrieve API key
-export const getGeminiApiKey = (): string => {
-  return (
-    process.env.GEMINI_API_KEY ||
-    process.env.API_KEY ||
-    process.env.GOOGLE_API_KEY ||
-    process.env.GEMINI_KEY ||
-    ""
-  ).trim();
-};
 
-// Test hook: lets a harness supply a fake model client.
-let aiClientOverride: GoogleGenAI | null = null;
-export function setAgentAIClientForTesting(client: GoogleGenAI | null) {
-  aiClientOverride = client;
+// All model calls go through the router (src/services/llm.ts): Groq + Gemini with fallback and usage logging.
+/** Tests: supply a fake client with models.generateContent({ contents }) → { text }. */
+export function setAgentAIClientForTesting(client: any | null) {
+  setTestClient(client);
 }
 
-export const getAIClient = () => {
-  if (aiClientOverride) return aiClientOverride;
-  const apiKey = getGeminiApiKey();
-  if (!apiKey) return null;
-  return new GoogleGenAI({ apiKey });
+/** Truthy when at least one LLM provider is configured (kept for the existing call sites). */
+export const getAIClient = () => (llmAvailable() ? ({} as any) : null);
+
+/** Model shown in agent logs: the first choice for that job. */
+const modelFor = (job: LlmJob) => {
+  const c = routeFor(job)[0];
+  return `${c.provider}:${c.model}`;
 };
-
-// Model selection is configurable; the fallback is used when the primary errors.
-export const AGENT_PRIMARY_MODEL = (process.env.GEMINI_MODEL || 'gemini-3.8-flash').trim();
-export const AGENT_FALLBACK_MODEL = (process.env.GEMINI_FALLBACK_MODEL || 'gemini-2.5-flash').trim();
-
-// Once the primary model is known not to exist for this key, stop paying a failed round trip per call.
-let primaryModelUnavailable = false;
-
-const withTimeout = <T,>(p: Promise<T>, ms: number, label: string): Promise<T> =>
-  new Promise<T>((resolve, reject) => {
-    const t = setTimeout(() => reject(new Error(`${label} timed out after ${Math.round(ms / 1000)}s`)), ms);
-    p.then(
-      (v) => { clearTimeout(t); resolve(v); },
-      (e) => { clearTimeout(t); reject(e); }
-    );
-  });
+export const AGENT_PRIMARY_MODEL = modelFor('maker');
 
 export async function generateWithAgentModel(
-  ai: GoogleGenAI,
-  options: { contents: any; config?: any; timeoutMs?: number }
-): Promise<any> {
-  const timeoutMs = options.timeoutMs ?? 90_000;
-  const call = (model: string) =>
-    withTimeout(ai.models.generateContent({ model, contents: options.contents, config: options.config }), timeoutMs, model);
+  _ai: unknown,
+  options: { job: LlmJob; contents: string; config?: any; timeoutMs?: number }
+): Promise<{ text: string; provider: string; model: string }> {
+  const c = options.config || {};
+  return generate({
+    job: options.job,
+    prompt: options.contents,
+    json: c.responseMimeType === 'application/json',
+    responseSchema: c.responseSchema,
+    temperature: c.temperature,
+    maxOutputTokens: c.maxOutputTokens,
+    timeoutMs: options.timeoutMs,
+  });
+}
 
-  if (!primaryModelUnavailable && AGENT_PRIMARY_MODEL !== AGENT_FALLBACK_MODEL) {
-    try {
-      return await call(AGENT_PRIMARY_MODEL);
-    } catch (err: any) {
-      const msg = String(err?.message || err);
-      if (/not\s*found|404|not supported|does not exist|unknown model/i.test(msg)) {
-        primaryModelUnavailable = true;
-      }
-      console.warn(`[Agent Pipeline] ${AGENT_PRIMARY_MODEL} failed (${msg}). Using ${AGENT_FALLBACK_MODEL}.`);
-    }
+/** JSON array from model output; tolerates {"issues":[...]}-style wrappers some models return. */
+function parseJsonArray(text: string): any[] {
+  const v = extractJson(text || '');
+  if (Array.isArray(v)) return v;
+  if (v && typeof v === 'object') {
+    const arr = Object.values(v).find((x) => Array.isArray(x));
+    if (arr) return arr as any[];
   }
-  return call(AGENT_FALLBACK_MODEL);
+  return [];
 }
 
 /** Sentence splitter that does not break on "p.a.", "Rs.", "e.g." and similar abbreviations. */
@@ -223,13 +206,51 @@ function splitSentences(text: string): string[] {
     .filter((s) => s.split(/\s+/).length >= 3);
 }
 
+/** What an LLM gate sees: the full heading outline plus as much body text as fits its budget. */
+const GATE_CONTENT_CHARS = 12000;
+function contentForGate(content: string): string {
+  const text = content || '';
+  const outline = text
+    .split('\n')
+    .filter((l) => /^#{1,3}\s/.test(l))
+    .map((l) => l.trim())
+    .slice(0, 60)
+    .join('\n');
+  const excerpt = text.length > GATE_CONTENT_CHARS ? `${text.slice(0, GATE_CONTENT_CHARS)}\n[... page continues; see the outline for the remaining sections ...]` : text;
+  return `PAGE OUTLINE (every heading on the page, in order):
+${outline || '(no headings)'}
+
+PAGE TEXT${text.length > GATE_CONTENT_CHARS ? ' (first part)' : ''}:
+${excerpt}
+
+Do not report something as missing if the outline shows a section that likely covers it.`;
+}
+
+/** Maps an LLM gate finding to a flag severity; issues that need information not on the page can never block. */
+function gateSeverity(f: any): FlagSeverity {
+  if (f?.needsInfoNotOnPage === true || f?.needsInfoNotOnPage === 'true') return 'info';
+  if (f?.severity === 'high') {
+    // Only evidence-backed findings may block publishing.
+    const hasQuote = typeof f.quote === 'string' && f.quote.trim().length >= 4;
+    const hasRule = typeof f.rule === 'string' && f.rule.trim().length >= 4;
+    return hasQuote && hasRule ? 'critical' : 'warning';
+  }
+  return f?.severity === 'medium' ? 'warning' : 'info';
+}
+const editorNote = (f: any) => (f?.needsInfoNotOnPage === true || f?.needsInfoNotOnPage === 'true' ? ' (Needs information an editor must supply.)' : '');
+const titleFrom = (text: string, fallback: string) => {
+  const t = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!t) return fallback;
+  return t.length > 80 ? `${t.slice(0, 77).replace(/\s+\S*$/, '')}…` : t;
+};
+
 // Shared severity rubric for the LLM review gates. "high" blocks publishing, so it is
 // reserved for problems the writer can actually fix with the information available.
 const GATE_SEVERITY_RULES = `SEVERITY RUBRIC:
-- "high": the page would be non-compliant, misleading or unsafe to publish (forbidden phrases, wrong or contradicted facts, missing mandatory disclosures, manipulative claims).
+- "high": the page would be non-compliant, misleading or unsafe to publish (forbidden phrases, wrong or contradicted facts, missing mandatory disclosures, manipulative claims). A "high" finding MUST quote the exact text and name the exact rule it breaks; if you cannot, it is "medium". Two statements that can both be true (e.g. "no hidden charges" next to a published fee table) are not a contradiction.
 - "medium": a clear quality problem the writer can fix with the information on the page or in the guidelines.
 - "low": polish.
-- If fixing an issue needs information that is NOT in the content or guidelines (author names, registration numbers, source links, new statistics), use "low" and state what an editor must supply. Never ask the writer to invent facts or figures.`;
+- If fixing an issue needs information that is NOT in the content or guidelines (author names, registration numbers, phone numbers, source links, example calculations, new statistics), set "needsInfoNotOnPage": true and state what an editor must supply. Never ask the writer to invent facts or figures.`;
 
 // Safe JSON parser helper
 export function cleanJsonParse<T = any>(rawText: string, fallback: T): T {
@@ -507,6 +528,7 @@ OUTPUT: Respond with ONLY valid JSON, no commentary, no markdown fences, in exac
 }`;
 
       const response = await generateWithAgentModel(ai, {
+        job: 'extraction',
         contents: prompt,
         config: {
           responseMimeType: 'application/json',
@@ -577,7 +599,7 @@ export async function runAgent2Compliance(params: {
     agentId: 'agent-2',
     agentName: 'Agent 2: Guideline Compliance Agent',
     role: 'Audits copy strictly against Product Guidelines (product positioning, target audience, core value props, compliance notes, and forbidden phrases)',
-    model: AGENT_PRIMARY_MODEL,
+    model: modelFor('gate-compliance'),
     status: 'running',
     timestamp: new Date().toISOString()
   };
@@ -604,7 +626,7 @@ SECTIONS TO CHECK:
 metaTitle: ${extractedData.metaTitle}
 metaDescription: ${extractedData.metaDescription}
 tags: ${extractedData.tags}
-content: ${extractedData.content.slice(0, 5000)}
+${contentForGate(extractedData.content)}
 
 CRITICAL BOUNDARIES FOR AGENT 2 (MANDATORY):
 - DO NOT audit, flag, or report Schema.org JSON-LD or Sitemap. Agent 3 is the dedicated SEO Backend Data agent solely responsible for technical SEO, schema completeness, and sitemap.
@@ -624,17 +646,22 @@ OUTPUT: Respond with ONLY a valid JSON array, no markdown fences, no commentary,
     "category": "Guidelines",
     "severity": "low" | "medium" | "high",
     "issue": "specific description quoting the offending text and the rule it breaks",
-    "suggestion": "the exact correction per the guideline"
+    "suggestion": "the exact correction per the guideline",
+    "quote": "the exact text from the page this is about (empty if the issue is something missing)",
+    "rule": "the specific guideline rule or standard it breaks",
+    "needsInfoNotOnPage": true | false
+  
   }
 ]
 If a section has no violations, do not include it. Return [] if nothing violates the guidelines.`;
 
       const res = await generateWithAgentModel(ai, {
+        job: 'gate-compliance',
         contents: prompt,
-        config: { responseMimeType: 'application/json' }
+        config: { responseMimeType: 'application/json', maxOutputTokens: 2048 }
       });
 
-      const parsedArray = cleanJsonParse<any[]>(res.text || '', []);
+      const parsedArray = parseJsonArray(res.text);
       if (Array.isArray(parsedArray)) {
         parsedArray.forEach((f: any, idx: number) => {
           const issueLower = (f.issue || '').toLowerCase();
@@ -648,7 +675,7 @@ If a section has no violations, do not include it. Return [] if nothing violates
           if (extractedData.metaTitle && (issueLower.includes('missing title') || issueLower.includes('missing meta title') || issueLower.includes('no title'))) return;
           if (extractedData.metaDescription && (issueLower.includes('missing description') || issueLower.includes('missing meta description') || issueLower.includes('no description'))) return;
 
-          const sev = f.severity === 'high' ? 'critical' : f.severity === 'medium' ? 'warning' : 'info';
+          const sev = gateSeverity(f);
           const isProduct = (f.issue?.toLowerCase().includes('regulatory') || f.issue?.toLowerCase().includes('product') || f.issue?.toLowerCase().includes('fact'));
           const gSec: GuidelineSectionType = isProduct ? 'Product Guidelines' : 'Content Guidelines';
           const isMeta = ['metatitle', 'metadescription'].includes(sectionLower);
@@ -664,11 +691,11 @@ If a section has no violations, do not include it. Return [] if nothing violates
             fieldName: isMeta ? f.section : 'bodyContent',
             category: 'GUIDELINE_COMPLIANCE',
             severity: sev,
-            issueTitle: `Guideline Violation: ${f.section || 'General Copy'}`,
+            issueTitle: titleFrom(f.issue, `Guideline issue in ${f.section || 'content'}`),
             issueDescription: f.issue || 'Content violates specified guidelines.',
             whyThisSuggestionIsGiven: 'Maintains strict adherence to product and SEO policy standards.',
             guidelineReference: 'Guidelines Rule-Checker',
-            proposedFixPreview: f.suggestion || 'Apply corrective phrasing.',
+            proposedFixPreview: (f.suggestion || 'Apply corrective phrasing.') + editorNote(f),
             fixed: false
           });
         });
@@ -773,7 +800,7 @@ export async function runAgent3SeoBackend(params: {
     agentId: 'agent-3',
     agentName: 'Agent 3: SEO Backend Data Agent',
     role: 'Audits copy strictly against SEO Guidelines (title/meta desc lengths, schema completeness, canonical graph hierarchy order, sitemap)',
-    model: AGENT_PRIMARY_MODEL,
+    model: 'deterministic',
     status: 'running',
     timestamp: new Date().toISOString()
   };
@@ -1122,7 +1149,7 @@ export async function runAgent4KeywordIntentMapping(params: {
     agentId: 'agent-4',
     agentName: 'Agent 4: Keyword & Intent Mapping Agent',
     role: 'Audits structure hierarchy, H1 primary keyword presence, heading keyword mapping, and frequency',
-    model: AGENT_PRIMARY_MODEL,
+    model: 'deterministic',
     status: 'running',
     timestamp: new Date().toISOString()
   };
@@ -1445,7 +1472,7 @@ export async function runAgent5CustomerCentricity(params: {
     agentId: 'agent-5',
     agentName: 'Agent 5: Customer Centricity Agent',
     role: 'Audits copy strictly against Customer Centricity Guidelines, layman accessibility, and UX friction patterns',
-    model: AGENT_PRIMARY_MODEL,
+    model: modelFor('gate-customer'),
     status: 'running',
     timestamp: new Date().toISOString()
   };
@@ -1475,7 +1502,7 @@ CUSTOMER CENTRICITY GUIDELINES:
 - Custom Rules: ${customerGuidelines.customCustomerRules || 'None'}
 
 PAGE CONTENT:
-${extractedData.content.slice(0, 4000)}
+${contentForGate(extractedData.content)}
 
 Evaluate for:
 1. Plain-language comprehension — flag jargon used without explanation nearby for the target persona.
@@ -1493,20 +1520,24 @@ OUTPUT: Respond with ONLY a valid JSON array, no markdown fences, no commentary:
     "category": "Customer",
     "severity": "low" | "medium" | "high",
     "issue": "specific description of what's unclear, missing, or manipulative, quoting the relevant text",
-    "suggestion": "specific, concrete fix — not generic advice like 'be clearer', but the actual clarification, reordering, or addition needed"
+    "suggestion": "specific, concrete fix — not generic advice like 'be clearer', but the actual clarification, reordering, or addition needed",
+    "quote": "the exact text from the page this is about (empty if the issue is something missing)",
+    "rule": "the specific guideline rule or standard it breaks",
+    "needsInfoNotOnPage": true | false
   }
 ]
 Only flag concrete issues you can point to in the text. Return [] if genuinely customer-friendly.`;
 
       const res = await generateWithAgentModel(ai, {
+        job: 'gate-customer',
         contents: prompt,
-        config: { responseMimeType: 'application/json' }
+        config: { responseMimeType: 'application/json', maxOutputTokens: 2048 }
       });
 
-      const parsedArray = cleanJsonParse<any[]>(res.text || '', []);
+      const parsedArray = parseJsonArray(res.text);
       if (Array.isArray(parsedArray)) {
         parsedArray.forEach((f: any, idx: number) => {
-          const sev = f.severity === 'high' ? 'critical' : f.severity === 'medium' ? 'warning' : 'info';
+          const sev = gateSeverity(f);
           flags.push({
             id: `agent5-flag-${Date.now()}-${idx}`,
             agentOrigin: 'Agent 5: Customer Centricity',
@@ -1515,11 +1546,11 @@ Only flag concrete issues you can point to in the text. Return [] if genuinely c
             fieldName: 'bodyContent',
             category: 'CUSTOMER_CENTRICITY',
             severity: sev,
-            issueTitle: `Customer Experience: ${f.issue ? f.issue.slice(0, 45) + '...' : 'Readability & Clarity'}`,
+            issueTitle: titleFrom(f.issue, 'Readability and clarity'),
             issueDescription: f.issue || 'Content lacks customer clarity or reader accessibility.',
             whyThisSuggestionIsGiven: 'Customer centricity reduces cognitive friction, builds trust, and helps users make informed decisions.',
             guidelineReference: 'Customer Centricity Guidelines: Layman Comprehension & Friction Elimination',
-            proposedFixPreview: f.suggestion || 'Clarify phrasing for the reader in plain terms.',
+            proposedFixPreview: (f.suggestion || 'Clarify phrasing for the reader in plain terms.') + editorNote(f),
             fixed: false
           });
         });
@@ -1674,7 +1705,7 @@ export async function runAgent6EeatGeo(params: {
     agentId: 'agent-6',
     agentName: 'Agent 6: EEAT & GEO Agent',
     role: 'Audits copy strictly against GEO Guidelines (verifiable statistics, 40-50 word direct answer blocks, entity clarity, citation formatting)',
-    model: AGENT_PRIMARY_MODEL,
+    model: modelFor('gate-eeat-geo'),
     status: 'running',
     timestamp: new Date().toISOString()
   };
@@ -1696,10 +1727,10 @@ ${GATE_SEVERITY_RULES}
 SECTIONS TO EVALUATE:
 metaTitle: ${extractedData.metaTitle}
 metaDescription: ${extractedData.metaDescription}
-schema: ${extractedData.schema}
+schema (truncated): ${(extractedData.schema || "").slice(0, 2500)}
 sitemap: ${extractedData.sitemap}
 tags: ${extractedData.tags}
-content: ${extractedData.content.slice(0, 4000)}
+${contentForGate(extractedData.content)}
 
 Check for:
 EEAT:
@@ -1721,20 +1752,24 @@ OUTPUT: Respond with ONLY a valid JSON array, no markdown fences, no commentary:
     "category": "EEAT" | "GEO",
     "severity": "low" | "medium" | "high",
     "issue": "specific description, quoting the vague/missing/contradictory text",
-    "suggestion": "specific fix — the actual citable fact, attribution, or consistency correction needed"
+    "suggestion": "specific fix — the actual citable fact, attribution, or consistency correction needed",
+    "quote": "the exact text from the page this is about (empty if the issue is something missing)",
+    "rule": "the specific guideline rule or standard it breaks",
+    "needsInfoNotOnPage": true | false
   }
 ]
 Return [] for a category with no issues. Do not flag SEO mechanics.`;
 
       const res = await generateWithAgentModel(ai, {
+        job: 'gate-eeat-geo',
         contents: prompt,
-        config: { responseMimeType: 'application/json' }
+        config: { responseMimeType: 'application/json', maxOutputTokens: 2048 }
       });
 
-      const parsedArray = cleanJsonParse<any[]>(res.text || '', []);
+      const parsedArray = parseJsonArray(res.text);
       if (Array.isArray(parsedArray)) {
         parsedArray.forEach((f: any, idx: number) => {
-          const sev = f.severity === 'high' ? 'critical' : f.severity === 'medium' ? 'warning' : 'info';
+          const sev = gateSeverity(f);
           const subCat: 'EEAT' | 'GEO' = (f.category?.toUpperCase() === 'GEO' ? 'GEO' : 'EEAT');
           const section = String(f.section || 'content');
           const isBackend = ['metatitle', 'metadescription', 'schema', 'sitemap', 'tags'].includes(section.toLowerCase());
@@ -1748,11 +1783,11 @@ Return [] for a category with no issues. Do not flag SEO mechanics.`;
             category: 'EEAT_GEO',
             subCategory: subCat,
             severity: sev,
-            issueTitle: `${f.category || 'EEAT/GEO'} Violation: ${f.section || 'General'}`,
+            issueTitle: titleFrom(f.issue, `${f.category || 'EEAT/GEO'} issue in ${f.section || 'content'}`),
             issueDescription: f.issue || 'Content lacks EEAT authority or GEO citation readiness.',
             whyThisSuggestionIsGiven: 'Enhances YMYL trust signals and AI answer engine citability.',
             guidelineReference: `EEAT & GEO Standards (${f.category || 'EEAT'})`,
-            proposedFixPreview: f.suggestion || 'Apply corrective attribution or citable fact.',
+            proposedFixPreview: (f.suggestion || 'Apply corrective attribution or citable fact.') + editorNote(f),
             fixed: false
           });
         });
@@ -1949,7 +1984,7 @@ export async function runAgent7Maker(params: {
 
   const ai = getAIClient();
   if (!ai) {
-    throw new Error('The maker needs a Gemini API key. Set GEMINI_API_KEY in .env and restart the server.');
+    throw new Error('The maker needs an LLM key. Set GEMINI_API_KEY (and optionally GROQ_API_KEY) in .env and restart the server.');
   }
 
   const pg = params.productGuidelines;
@@ -2020,6 +2055,7 @@ ${source}`;
   for (let attempt = 1; attempt <= 2 && !draft; attempt++) {
     try {
       const res = await generateWithAgentModel(ai, {
+        job: 'maker',
         contents: attempt === 1 ? prompt : `${prompt}\n\nYour previous reply was not valid JSON for the required fields. Reply with the JSON object only.`,
         config: {
           responseMimeType: 'application/json',
@@ -2033,6 +2069,7 @@ ${source}`;
       if (!draft) lastError = 'Maker returned an incomplete draft (missing H1 or sections).';
     } catch (err: any) {
       lastError = err?.message || String(err);
+      if (/^No model could complete/.test(lastError)) break; // nothing left to try
     }
   }
   if (!draft) {
@@ -2077,7 +2114,7 @@ export async function runAgent8VerificationGate(params: {
     agentId: 'agent-8',
     agentName: 'Agent 8: Verification & Advisory Gate',
     role: 'Decides whether the draft qualifies for publishing and compiles the notes for the maker',
-    model: AGENT_PRIMARY_MODEL,
+    model: modelFor('verify-fidelity'),
     status: 'running',
     timestamp: new Date().toISOString(),
   };
@@ -2113,6 +2150,7 @@ export async function runAgent8VerificationGate(params: {
   if (ai) {
     try {
       const res = await generateWithAgentModel(ai, {
+        job: 'verify-fidelity',
         contents: `You are Agent 8, the verification gate. Compare the DRAFT with the SOURCE and APPROVED FACTS. List every claim in the draft that is not supported by them: invented features, guarantees, certifications, people or organisations, contradicted facts, or meaning that changed. Ignore style, wording, structure and SEO.
 
 Severity: "high" if publishing it would mislead a reader or create legal/regulatory risk; "medium" if it is an unsupported but harmless embellishment.
@@ -2130,7 +2168,7 @@ ${draftToMarkdown(params.draft).slice(0, 20000)}`,
         config: { responseMimeType: 'application/json', temperature: 0 },
         timeoutMs: 90_000,
       });
-      const issues = cleanJsonParse<any[]>(res.text || '', []);
+      const issues = parseJsonArray(res.text);
       (Array.isArray(issues) ? issues : []).slice(0, 15).forEach((i: any) => {
         if (!i?.claim) return;
         const high = String(i.severity).toLowerCase() === 'high';
@@ -2329,7 +2367,16 @@ export function alignScoresWithGates(nine: NineAgentScores, gates: GateResult[])
   };
 }
 
-export async function runAgent9OrchestrationPipeline(params: {
+export async function runAgent9OrchestrationPipeline(
+  params: Parameters<typeof orchestratePipeline>[0]
+): ReturnType<typeof orchestratePipeline> {
+  const runId = params.runId || `run-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  return runContext.run({ runId, pageUrl: params.url || params.backendData?.canonicalUrl }, () => orchestratePipeline({ ...params, runId }));
+}
+
+async function orchestratePipeline(params: {
+  /** Identifier for usage logs; generated when omitted. */
+  runId?: string;
   rawHtml?: string;
   url?: string;
   pastedText?: string;
@@ -2371,7 +2418,7 @@ export async function runAgent9OrchestrationPipeline(params: {
   finalVerdict: PipelineVerdict;
 }> {
   const pipelineStartTime = Date.now();
-  const pipelineRunId = `run-${Date.now()}`;
+  const pipelineRunId = params.runId || `run-${Date.now()}`;
   const logs: AgentExecutionLog[] = [];
   const bus: AgentMessagePacket[] = [];
   let packet = 1;

@@ -13,3 +13,6 @@ coverage/
 # Python scraper output
 __pycache__/
 scraped_output/
+
+# Admin panel usage logs
+data/usage/

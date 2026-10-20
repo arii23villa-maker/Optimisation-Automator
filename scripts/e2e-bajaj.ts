@@ -20,14 +20,32 @@ const BASE = (process.env.BASE_URL || 'http://localhost:3000').replace(/\/$/, ''
 const REPORT = process.env.E2E_REPORT || 'docs/E2E-REPORT.md';
 const MAX_REVISIONS = Number(process.env.E2E_MAX_REVISIONS || 1);
 
-const PAGES: Record<string, { url: string; profile: string }> = {
-  'personal-loan': { url: 'https://www.bajajfinserv.in/personal-loan', profile: 'bfl-profile-personal-loan' },
-  'business-loan': { url: 'https://www.bajajfinserv.in/business-loan', profile: 'bfl-profile-business-loan' },
-  'home-loan': { url: 'https://www.bajajfinserv.in/home-loan', profile: 'bfl-profile-home-loan' },
-  'gold-loan': { url: 'https://www.bajajfinserv.in/gold-loan', profile: 'bfl-profile-gold-loan' },
-  'fixed-deposit': { url: 'https://www.bajajfinserv.in/fixed-deposit', profile: 'bfl-profile-fixed-deposit' },
-  'insta-emi-card': { url: 'https://www.bajajfinserv.in/insta-emi-card', profile: 'bfl-profile-insta-emi-card' },
+const B = 'https://www.bajajfinserv.in';
+const PAGES: Record<string, { url: string; profile: string; type: 'product' | 'blog' | 'article' }> = {
+  // Product pages
+  'personal-loan': { url: `${B}/personal-loan`, profile: 'bfl-profile-personal-loan', type: 'product' },
+  'business-loan': { url: `${B}/business-loan`, profile: 'bfl-profile-business-loan', type: 'product' },
+  'home-loan': { url: `${B}/home-loan`, profile: 'bfl-profile-home-loan', type: 'product' },
+  'gold-loan': { url: `${B}/gold-loan`, profile: 'bfl-profile-gold-loan', type: 'product' },
+  'fixed-deposit': { url: `${B}/fixed-deposit`, profile: 'bfl-profile-fixed-deposit', type: 'product' },
+  'insta-emi-card': { url: `${B}/insta-emi-card`, profile: 'bfl-profile-insta-emi-card', type: 'product' },
+  // Blogs (en-blogs sitemap)
+  'blog-prepay-personal-loan': { url: `${B}/how-to-prepay-personal-loan`, profile: 'bfl-profile-personal-loan', type: 'blog' },
+  'blog-first-time-borrowers': { url: `${B}/personal-loan-for-first-time-borrowers`, profile: 'bfl-profile-personal-loan', type: 'blog' },
+  'blog-loan-in-10-minutes': { url: `${B}/instant-personal-loan-in-10-minutes`, profile: 'bfl-profile-personal-loan', type: 'blog' },
+  // Articles (en-adp sitemap)
+  'article-emi-affordability': { url: `${B}/how-much-emi-can-i-afford`, profile: 'bfl-profile-personal-loan', type: 'article' },
+  'article-fd-closure': { url: `${B}/fd-closure-process`, profile: 'bfl-profile-fixed-deposit', type: 'article' },
+  'article-digital-personal-loan': { url: `${B}/how-salaried-employees-can-get-a-digital-personal-loan`, profile: 'bfl-profile-personal-loan', type: 'article' },
 };
+
+/** The default real-test set: 3 product pages, 3 blogs, 3 articles. */
+const DEFAULT_SET = [
+  'personal-loan', 'fixed-deposit', 'insta-emi-card',
+  'blog-prepay-personal-loan', 'blog-first-time-borrowers', 'blog-loan-in-10-minutes',
+  'article-emi-affordability', 'article-fd-closure', 'article-digital-personal-loan',
+];
+const OUTPUT_DIR = process.env.E2E_OUTPUT_DIR || 'docs/e2e-outputs';
 
 type Check = { name: string; ok: boolean; detail: string };
 type PageResult = { key: string; url: string; checks: Check[]; summary: Record<string, string | number>; seconds: number };
@@ -96,6 +114,7 @@ async function testPage(key: string, url: string, profileId: string, gemini: boo
   const comp = fetched.components?.[0];
   const body: string = comp?.bodyContent || '';
   const words = body.split(/\s+/).filter(Boolean).length;
+  summary.type = PAGES[key]?.type || 'custom';
   summary.source = fetched.fetchSource;
   summary.title = fetched.backend?.metaTitle || '';
   summary.words = words;
@@ -174,6 +193,38 @@ async function testPage(key: string, url: string, profileId: string, gemini: boo
       if (brand) check(`Brand "${brand}" in meta title`, new RegExp(brand, 'i').test(t), t);
       check('Approved verdict needs zero blocking issues', result.finalVerdict !== 'APPROVED' || (selected.verification.blockingIssues || []).length === 0, '');
 
+      // Save the actual output for review.
+      mkdirSync(OUTPUT_DIR, { recursive: true });
+      const notes = rounds.flatMap((r: any) => (r.feedbackToMaker || []).map((n: any) => `- [draft ${r.round}] [${n.severity}] ${n.source}: ${n.issue}`));
+      writeFileSync(
+        `${OUTPUT_DIR}/${key}.md`,
+        [
+          `# ${key}`,
+          '',
+          `Source: ${url}`,
+          `Verdict: **${result.finalVerdict}** after ${rounds.length} draft(s) · score ${result.beforeScores?.overallScore} → ${result.afterScores?.overallScore}`,
+          '',
+          '## Metadata',
+          '',
+          '| | Before | After |',
+          '|---|---|---|',
+          `| Title | ${String(fetched.backend?.metaTitle || '').replace(/\|/g, '\\|')} | ${String(result.updatedBackend.metaTitle || '').replace(/\|/g, '\\|')} |`,
+          `| Description | ${String(fetched.backend?.metaDescription || '').replace(/\|/g, '\\|')} | ${String(result.updatedBackend.metaDescription || '').replace(/\|/g, '\\|')} |`,
+          '',
+          '## Blocking issues on the returned draft',
+          '',
+          ...((selected.verification.blockingIssues || []).length ? selected.verification.blockingIssues.map((b: string) => `- ${b}`) : ['- none']),
+          '',
+          '## Notes the gates sent to the maker',
+          '',
+          ...(notes.length ? notes : ['- none']),
+          '',
+          '## Optimized content',
+          '',
+          md,
+        ].join('\n')
+      );
+
       // 4. Scoped revision: metadata only; the body must not change.
       const revised = await runPipeline({
         url,
@@ -224,7 +275,7 @@ function renderReport(results: PageResult[], health: any): string {
 async function main() {
   const health = await fetch(`${BASE}/api/health`).then((r) => r.json());
   const gemini = !!health.integrations?.gemini;
-  const selection = (process.env.E2E_PAGES || Object.keys(PAGES).join(','))
+  const selection = (process.env.E2E_PAGES || DEFAULT_SET.join(','))
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);

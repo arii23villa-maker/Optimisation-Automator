@@ -55,13 +55,56 @@ Then in the app:
 
 | Variable | Required | Purpose |
 |---|---|---|
-| `GEMINI_API_KEY` | **Yes** | The maker (Agent 7), the LLM checks in gates 2, 5 and 6, and Agent 8's semantic fact check. Without it the tool still fetches, extracts and audits deterministically, but cannot write content. |
-| `GEMINI_MODEL` / `GEMINI_FALLBACK_MODEL` | No | Model overrides. The fallback is used if the primary errors. |
+| `GEMINI_API_KEY` | **Yes** | Writes pages (Agent 7) and fact-checks drafts (Agent 8); backup for Groq. Without a working Gemini key, pages are audited but not rewritten. |
+| `GROQ_API_KEY` | Recommended | Runs the review gates (2, 5, 6), keyword detection and the H2 optimizer; backup for Gemini. |
+| `GEMINI_MODEL` / `GEMINI_FALLBACK_MODEL` | No | Defaults `gemini-3.8-flash` / `gemini-3.1-flash-lite`. |
+| `GROQ_MODEL` / `GROQ_FALLBACK_MODEL` | No | Defaults `openai/gpt-oss-120b` / `openai/gpt-oss-20b`. |
+| `GROQ_TPM_LIMIT` | No | Groq tokens-per-minute limit (free tier 8000). Requests that cannot fit are skipped instead of sent. |
+| `ADMIN_PASSWORD` | For /admin | Password for the admin panel. The panel is disabled until it is set. |
+| `USD_INR_RATE` | No | Shows rupee estimates next to USD in the admin panel. |
+| `USAGE_LOG_DIR` | No | Where usage logs are written (default `data/usage`). Point at persistent storage in production. |
 | `FIRECRAWL_API_KEY` | Recommended | Primary scraper. Without it the server fetches pages directly, which some sites block. |
 | `GOOGLE_ADS_CLIENT_ID`, `GOOGLE_ADS_CLIENT_SECRET`, `GOOGLE_ADS_REFRESH_TOKEN`, `GOOGLE_ADS_CUSTOMER_ID`, `GOOGLE_ADS_DEVELOPER_TOKEN` | No | Verified search volumes from Keyword Planner. All five are needed. Without them keywords show "vol. n/a"; volumes are never estimated. |
 | `ALLOWED_ORIGINS` | No | Comma-separated origins allowed to call the API cross-origin. Same-origin always works. |
 
 `GET /api/health` reports which integrations are configured (never their values).
+
+## Models and routing
+
+All model calls go through one router (`src/services/llm.ts`). Each job has a first choice and backups:
+
+| Job | First choice | Backups |
+|---|---|---|
+| Write / revise the page (Agent 7) | Gemini `gemini-3.8-flash` | Gemini `gemini-3.1-flash-lite` → Groq `gpt-oss-120b` |
+| Fact check (Agent 8) | Gemini `gemini-3.8-flash` | Gemini lite → Groq `gpt-oss-120b` |
+| Clean up pasted HTML (Agent 1) | Gemini `gemini-3.8-flash` | Gemini lite → Groq |
+| Review gates 2, 5, 6; keywords; H2 optimizer | Groq `gpt-oss-120b` | Groq `gpt-oss-20b` → Gemini → Gemini lite |
+
+Why: writing and fact-checking read whole pages (often 10–25k tokens) and write long structured output, which
+Gemini handles and Groq's free tier (8,000 tokens per minute) cannot. The checks are short and benefit from Groq's
+speed and price, which also keeps Gemini's quota for writing. `gemini-3.8-flash` is Google's current recommended
+model; `gemini-3.1-pro-preview` writes slightly better but has no free tier and costs about 3× more
+(set `GEMINI_MODEL` to switch).
+
+The router retries a rate limit once when the wait is under 20 s, retries server errors once, pauses a model for
+10 minutes after an auth/permission/not-found error, treats unparseable JSON as a failure, and logs every attempt.
+
+## Admin panel
+
+Open **/admin** (gauge icon in the header) and sign in with `ADMIN_PASSWORD`. One page, refreshed every minute:
+
+- AI calls, estimated cost, tokens, rate-limit hits, backup-model use and pages processed (last 7 days and all time)
+- Daily Gemini vs Groq chart (calls, tokens or cost; hover for numbers or switch to a table)
+- Per-provider health: status, success rate, typical response time, last success and failure, paused models
+- Which provider does which job, with first choice, backups and who actually did the work
+- Why rate limits happened, and Groq's remaining daily allowance
+- What is failing and why, in plain language with what to do, plus a list of recent failures
+- Firecrawl monthly credits (live from Firecrawl), fetches and failures
+- Page runs and outcomes (approved / does not qualify / writer unavailable / failed), with time, drafts and cost per run
+- Connected services and the price list used for cost estimates
+
+Costs are estimates at list price; free-tier usage is not billed. Usage is logged to `data/usage/*.jsonl`
+(git-ignored).
 
 ## Scripts
 
@@ -71,7 +114,7 @@ Then in the app:
 | `npm run build` / `npm start` | Production build to `dist/` and run it. |
 | `npm run lint` | TypeScript type check. |
 | `npm test` | Unit and pipeline tests (no network, no API key; the model is scripted). |
-| `npm run test:e2e` | End-to-end test against live Bajaj Finserv pages through the running server; writes [docs/E2E-REPORT.md](docs/E2E-REPORT.md). Start `npm run dev` first. |
+| `npm run test:e2e` | Real test against 9 live Bajaj Finserv pages (3 products, 3 blogs, 3 articles) through the running server; writes [docs/E2E-REPORT.md](docs/E2E-REPORT.md) and each page's before/after content to `docs/e2e-outputs/`. Start `npm run dev` first. `E2E_PAGES=personal-loan,blog-prepay-personal-loan` runs a subset. |
 | `npm run theme` | Regenerates `src/theme.css` from `scripts/build-theme.mjs`. |
 
 > On Windows, if the project folder name contains `&`, `npm run` cannot find local binaries. Run them through Node,
@@ -91,8 +134,12 @@ server.ts                     Express API + Vite middleware (fetch/extract, keyw
 src/
   App.tsx                     App shell and state; pipeline and revision handlers
   components/                 UI (Header, PipelineRunPanel, ScrapeFixTab, GuidelinesTab, LiveWebpageView, …)
+    admin/                    Admin panel (/admin) and its charts
   services/
     agentPipeline.ts          Agents 1–9 and the orchestrator loop
+    llm.ts                    LLM router (Gemini + Groq): routing, retries, fallback, cost and token accounting
+    usageStore.ts             Append-only usage logs (LLM calls, Firecrawl, runs)
+    adminMetrics.ts           Aggregates the logs for the admin panel
     pageDraft.ts              Draft model: markdown/component conversion, heading-order check,
                               fabrication guard, schema builder, revision scopes, change log
     keywordPicker.ts          Deterministic keyword picker (phrases that occur on the page)
@@ -119,7 +166,10 @@ scraper.py                    Standalone Python scraper (not used by the app)
 
 ## Known limitations
 
-- Without `GEMINI_API_KEY` the maker cannot run, so pages are audited but not rewritten.
+- Without a working Gemini key the maker cannot run on full pages (Groq's free tier is too small), so pages are
+  audited but not rewritten.
+- On Groq's free tier the three review gates compete for 8,000 tokens per minute; expect rate-limit waits
+  (visible in the admin panel). Groq's paid Developer tier removes this.
 - The verification gate's numeric check is literal: a figure must appear in the source page or Product Guidelines.
   Rephrasings of the same figure in different units may be flagged.
 - Guideline presets are stored per browser (`localStorage`), not shared between users.

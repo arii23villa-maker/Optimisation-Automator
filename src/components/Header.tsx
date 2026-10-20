@@ -10,6 +10,7 @@ import {
   MonitorSmartphone,
   Sun,
   Moon,
+  Gauge,
 } from 'lucide-react';
 
 type TabId = 'guidelines' | 'scrape_fix' | 'webpage';
@@ -94,7 +95,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="brand-ribbon" />
         <div className="border-b border-slate-800">
           <div className="max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-14 gap-3">
+            <div className="no-wrap flex items-center justify-between h-14 gap-3">
               {/* Product */}
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="brand-mark w-8 h-8 rounded-lg flex items-center justify-center text-white text-[13px] font-semibold tracking-tight shrink-0 shadow-sm">
@@ -137,7 +138,7 @@ export const Header: React.FC<HeaderProps> = ({
               </nav>
 
               {/* Actions */}
-              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <div className="no-wrap flex items-center gap-1.5 sm:gap-2 shrink-0">
                 {hasAudited && (
                   <div className="hidden xl:flex items-center gap-3 pr-3 mr-1 border-r border-slate-800 text-[12px]">
                     <span className="text-slate-500">
@@ -197,6 +198,10 @@ export const Header: React.FC<HeaderProps> = ({
                 <button id="btn-open-export" onClick={onOpenExport} className={`${iconButton} hidden sm:flex`} title="Export code, schema and report" aria-label="Export">
                   <Download className="w-4 h-4" />
                 </button>
+
+                <a href="/admin" className={`${iconButton} hidden sm:flex`} title="Admin panel: usage, costs and health" aria-label="Admin panel">
+                  <Gauge className="w-4 h-4" />
+                </a>
               </div>
             </div>
           </div>

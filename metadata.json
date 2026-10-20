@@ -1,0 +1,8 @@
+{
+  "name": "Content Optimizer",
+  "description": "Multi-agent SEO, GEO and content platform: Agent 1 extracts the page, Agent 7 (the maker) writes the optimized page freely, Agents 2-6 review it (compliance, SEO backend, keyword & structure, customer centricity, EEAT & GEO), Agent 8 approves it or sends notes back to the maker, and Agent 9 orchestrates the loop.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

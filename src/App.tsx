@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Header, ThemeMode } from './components/Header';
+import { Header } from './components/Header';
+import { useTheme } from './lib/theme';
 import { GuidelinesTab } from './components/GuidelinesTab';
 import { ScrapeFixTab } from './components/ScrapeFixTab';
 import { LiveWebpageView } from './components/LiveWebpageView';
 import { DiffPreviewModal } from './components/DiffPreviewModal';
 import { CodeExportModal } from './components/CodeExportModal';
 import { BeforeAfterViewer } from './components/BeforeAfterViewer';
-import { 
-  DEFAULT_PRODUCT_GUIDELINES, 
-  DEFAULT_SEO_GUIDELINES, 
+import {
+  DEFAULT_CONTENT_GUIDELINES,
+  DEFAULT_PRODUCT_GUIDELINES,
+  DEFAULT_SEO_GUIDELINES,
   DEFAULT_GEO_GUIDELINES,
   DEFAULT_CUSTOMER_CENTRICITY_GUIDELINES,
   DEFAULT_STRUCTURE_MAPPING_GUIDELINES,
@@ -43,7 +45,10 @@ import {
   loadSavedStructureMappingPresets,
   saveSavedStructureMappingPresets,
   loadWorkingProductGuidelines,
-  saveWorkingProductGuidelines
+  saveWorkingProductGuidelines,
+  buildGuidelineFile,
+  parseGuidelineFile,
+  mergeById
 } from './data/defaultProfiles';
 import { 
   ProductGuidelines, 
@@ -85,18 +90,8 @@ export default function App() {
   // Main Tab Navigation State: 'guidelines' | 'scrape_fix' | 'webpage'
   const [activeTab, setActiveTab] = useState<'guidelines' | 'scrape_fix' | 'webpage'>('scrape_fix');
 
-  // Light theme by default; the choice is remembered per browser.
-  const [theme, setTheme] = useState<ThemeMode>(() =>
-    document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'
-  );
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    try {
-      localStorage.setItem('co-theme', theme);
-    } catch {
-      /* storage may be unavailable */
-    }
-  }, [theme]);
+  // Light theme by default; shared with the landing page and remembered per browser.
+  const [theme, toggleTheme] = useTheme();
 
   // Guideline Profiles & Agent Routing State
   const [profiles, setProfiles] = useState<GuidelineProfile[]>(() => loadStoredProfiles());
@@ -138,24 +133,24 @@ export default function App() {
     return loadSavedCustomerCentricityPresets();
   });
 
-  // Active Preset Tracking
+  // Active Preset Tracking (nothing is built in, so a new browser has none selected)
   const [activeContentPresetId, setActiveContentPresetId] = useState<string>(() => {
-    return localStorage.getItem('active_content_preset_id') || 'bfl-content-standard';
+    return localStorage.getItem('active_content_preset_id') || '';
   });
   const [activeSeoPresetId, setActiveSeoPresetId] = useState<string>(() => {
-    return localStorage.getItem('active_seo_preset_id') || 'seo-preset-strict-eeat';
+    return localStorage.getItem('active_seo_preset_id') || '';
   });
   const [activeGeoPresetId, setActiveGeoPresetId] = useState<string>(() => {
-    return localStorage.getItem('active_geo_preset_id') || 'geo-preset-master-citation';
+    return localStorage.getItem('active_geo_preset_id') || '';
   });
   const [activeProductPresetId, setActiveProductPresetId] = useState<string>(() => {
-    return localStorage.getItem('active_product_preset_id') || 'bfl-product-personal-loan';
+    return localStorage.getItem('active_product_preset_id') || '';
   });
   const [activeStructureMappingPresetId, setActiveStructureMappingPresetId] = useState<string>(() => {
-    return localStorage.getItem('active_structure_mapping_preset_id') || 'structure-preset-voice-aeo';
+    return localStorage.getItem('active_structure_mapping_preset_id') || '';
   });
   const [activeCustomerCentricityPresetId, setActiveCustomerCentricityPresetId] = useState<string>(() => {
-    return localStorage.getItem('active_customer_centricity_preset_id') || 'customer-preset-ymyl-empathy';
+    return localStorage.getItem('active_customer_centricity_preset_id') || '';
   });
 
   // Current Active Working Guidelines & Keywords
@@ -651,9 +646,9 @@ export default function App() {
     localStorage.setItem('agent_guideline_config_v1', JSON.stringify(config));
   };
 
-  // Select and Activate a Stored Guideline Profile
-  const handleSelectProfile = (profileId: string) => {
-    const selected = (profiles || []).find(p => p.id === profileId);
+  // Select and Activate a Stored Guideline Profile. `list`: the profiles just saved, when state hasn't updated yet.
+  const handleSelectProfile = (profileId: string, list: GuidelineProfile[] = profiles) => {
+    const selected = (list || []).find(p => p.id === profileId);
     if (!selected) return;
 
     setProductGuidelines(selected.productGuidelines);
@@ -732,6 +727,7 @@ export default function App() {
       description: description.trim() || 'Custom blank guideline profile',
       category: category || 'custom',
       isBuiltIn: false,
+      contentGuidelines: { ...DEFAULT_CONTENT_GUIDELINES },
       productGuidelines: { ...DEFAULT_PRODUCT_GUIDELINES },
       seoGuidelines: { ...DEFAULT_SEO_GUIDELINES },
       geoGuidelines: { ...DEFAULT_GEO_GUIDELINES },
@@ -745,7 +741,7 @@ export default function App() {
     const updated = [...profiles, newProfile];
     setProfiles(updated);
     saveProfilesToStorage(updated);
-    handleSelectProfile(newProfile.id);
+    handleSelectProfile(newProfile.id, updated);
 
     showToast(`Created blank guideline profile: "${newProfile.name}"`, 'success');
   };
@@ -799,9 +795,9 @@ export default function App() {
     showToast('Guideline profile deleted.', 'info');
   };
 
-  // Delete all stored profiles
+  // Delete all stored profiles (only profiles: the saved guidelines of each section stay)
   const handleDeleteAllProfiles = () => {
-    resetToDefaultProfiles();
+    saveProfilesToStorage([]);
     setProfiles([]);
     handleUpdateAgentConfig({
       ...agentConfig,
@@ -823,14 +819,84 @@ export default function App() {
     showToast('Cleared editor. Ready to build new guidelines.', 'info');
   };
 
-  // Import Profiles
-  const handleImportProfiles = (imported: GuidelineProfile[]) => {
-    setProfiles(imported);
-    saveProfilesToStorage(imported);
-    if (imported.length > 0) {
-      handleSelectProfile(imported[0].id);
+  // Export every saved guideline (all six sections) and profile to one JSON file.
+  const handleExportGuidelines = () => {
+    const file = buildGuidelineFile(profiles, {
+      content: savedContentPresets,
+      product: savedProductPresets,
+      seo: savedSeoPresets,
+      geo: savedGeoPresets,
+      customerCentricity: savedCustomerCentricityPresets,
+      structureMapping: savedStructureMappingPresets,
+    });
+    const count = Object.values(file.presets).reduce((n, list) => n + list.length, 0);
+    if (!count && !file.profiles.length) {
+      showToast('Nothing to export yet. Save a guideline first ("Save as New Guideline" in a section).', 'info');
+      return;
     }
-    showToast(`Imported ${imported.length} Guideline Profile(s)!`, 'success');
+    const url = URL.createObjectURL(new Blob([JSON.stringify(file, null, 2)], { type: 'application/json' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `guidelines-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast(`Exported ${count} saved guideline(s)${file.profiles.length ? ` and ${file.profiles.length} profile(s)` : ''}.`, 'success');
+  };
+
+  // Import a guidelines file: adds its guidelines to this browser's (same id: replaced), never deletes any.
+  const handleImportGuidelines = (data: unknown) => {
+    const parsed = parseGuidelineFile(data);
+    if (!parsed) {
+      showToast('That file is not a guidelines export from this tool.', 'error');
+      return;
+    }
+    const { presets } = parsed;
+    // In a section with nothing selected yet, the first imported guideline becomes the active one.
+    const nothingActive = (activeId: string, list: { id: string }[]) => !list.some((p) => p.id === activeId);
+
+    const content = mergeById(savedContentPresets, presets.content);
+    setSavedContentPresets(content);
+    saveSavedContentPresets(content);
+    const product = mergeById(savedProductPresets, presets.product);
+    setSavedProductPresets(product);
+    saveSavedProductPresets(product);
+    const seo = mergeById(savedSeoPresets, presets.seo);
+    setSavedSeoPresets(seo);
+    saveSavedSeoPresets(seo);
+    const geo = mergeById(savedGeoPresets, presets.geo);
+    setSavedGeoPresets(geo);
+    saveSavedGeoPresets(geo);
+    const customer = mergeById(savedCustomerCentricityPresets, presets.customerCentricity);
+    setSavedCustomerCentricityPresets(customer);
+    saveSavedCustomerCentricityPresets(customer);
+    const structure = mergeById(savedStructureMappingPresets, presets.structureMapping);
+    setSavedStructureMappingPresets(structure);
+    saveSavedStructureMappingPresets(structure);
+
+    const activate = <T extends { id: string; guidelines: any }>(
+      activeId: string, before: T[], incoming: T[], apply: (p: T) => void, setActive: (id: string) => void, storageKey: string
+    ) => {
+      if (!incoming.length || !nothingActive(activeId, before)) return;
+      apply(incoming[0]);
+      setActive(incoming[0].id);
+      try { localStorage.setItem(storageKey, incoming[0].id); } catch (_) {}
+    };
+    activate(activeContentPresetId, savedContentPresets, presets.content, (p) => { setContentGuidelines(p.guidelines); saveGlobalContentGuidelines(p.guidelines); }, setActiveContentPresetId, 'active_content_preset_id');
+    activate(activeProductPresetId, savedProductPresets, presets.product, (p) => { setProductGuidelines(p.guidelines); saveWorkingProductGuidelines(p.guidelines); }, setActiveProductPresetId, 'active_product_preset_id');
+    activate(activeSeoPresetId, savedSeoPresets, presets.seo, (p) => { setSeoGuidelines(p.guidelines); saveGlobalSeoGuidelines(p.guidelines); }, setActiveSeoPresetId, 'active_seo_preset_id');
+    activate(activeGeoPresetId, savedGeoPresets, presets.geo, (p) => { setGeoGuidelines(p.guidelines); saveGlobalGeoGuidelines(p.guidelines); }, setActiveGeoPresetId, 'active_geo_preset_id');
+    activate(activeCustomerCentricityPresetId, savedCustomerCentricityPresets, presets.customerCentricity, (p) => { setCustomerCentricityGuidelines(p.guidelines); saveGlobalCustomerCentricityGuidelines(p.guidelines); }, setActiveCustomerCentricityPresetId, 'active_customer_centricity_preset_id');
+    activate(activeStructureMappingPresetId, savedStructureMappingPresets, presets.structureMapping, (p) => { setStructureMappingGuidelines(p.guidelines); saveGlobalStructureMappingGuidelines(p.guidelines); }, setActiveStructureMappingPresetId, 'active_structure_mapping_preset_id');
+
+    if (parsed.profiles.length) {
+      const merged = mergeById(profiles, parsed.profiles);
+      setProfiles(merged);
+      saveProfilesToStorage(merged);
+    }
+    const count = Object.values(presets).reduce((n, list) => n + list.length, 0);
+    showToast(`Imported ${count} guideline(s)${parsed.profiles.length ? ` and ${parsed.profiles.length} profile(s)` : ''}.`, 'success');
   };
 
   // Reset to Defaults
@@ -850,12 +916,12 @@ export default function App() {
     setSavedProductPresets(loadSavedProductPresets());
     setSavedStructureMappingPresets(loadSavedStructureMappingPresets());
     setSavedCustomerCentricityPresets(loadSavedCustomerCentricityPresets());
-    setActiveContentPresetId('content-preset-default');
-    setActiveSeoPresetId('seo-preset-default');
-    setActiveGeoPresetId('geo-preset-master-citation');
-    setActiveProductPresetId('product-preset-enterprise-solutions');
-    setActiveStructureMappingPresetId('structure-preset-strict-h1h2');
-    setActiveCustomerCentricityPresetId('customer-preset-empathetic-layman');
+    setActiveContentPresetId('');
+    setActiveSeoPresetId('');
+    setActiveGeoPresetId('');
+    setActiveProductPresetId('');
+    setActiveStructureMappingPresetId('');
+    setActiveCustomerCentricityPresetId('');
     const firstId = defaults[0]?.id || '';
     handleUpdateAgentConfig({
       unified: true,
@@ -1200,7 +1266,7 @@ export default function App() {
         hasAudited={hasAudited}
         keywordCount={keywords.length}
         theme={theme}
-        onToggleTheme={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}
+        onToggleTheme={toggleTheme}
       />
 
       {/* Toast Notification Alert */}
@@ -1261,7 +1327,8 @@ export default function App() {
             onDeleteProfile={handleDeleteProfile}
             onDeleteAllProfiles={handleDeleteAllProfiles}
             onCreateBlankGuidelines={handleCreateBlankGuidelines}
-            onImportProfiles={handleImportProfiles}
+            onExportGuidelines={handleExportGuidelines}
+            onImportGuidelines={handleImportGuidelines}
             onResetDefaults={handleResetDefaults}
             onUpdateContentGuidelines={setContentGuidelines}
             onUpdateProductGuidelines={setProductGuidelines}

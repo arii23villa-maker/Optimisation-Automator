@@ -16,3 +16,6 @@ scraped_output/
 
 # Admin panel usage logs
 data/usage/
+
+# Vercel build output
+.vercel/

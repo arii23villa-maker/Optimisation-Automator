@@ -12,6 +12,7 @@ import {
   Moon,
   Gauge,
 } from 'lucide-react';
+import { navigate } from '../lib/route';
 
 type TabId = 'guidelines' | 'scrape_fix' | 'webpage';
 export type ThemeMode = 'light' | 'dark';
@@ -97,7 +98,15 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-8">
             <div className="no-wrap flex items-center justify-between h-14 gap-3">
               {/* Product */}
-              <div className="flex items-center gap-2.5 min-w-0">
+              <a
+                href="/"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate('/');
+                }}
+                className="flex items-center gap-2.5 min-w-0"
+                title="About Content Optimizer"
+              >
                 <div className="brand-mark w-8 h-8 rounded-lg flex items-center justify-center text-white text-[13px] font-semibold tracking-tight shrink-0 shadow-sm">
                   CO
                 </div>
@@ -107,7 +116,7 @@ export const Header: React.FC<HeaderProps> = ({
                     Bajaj Finserv <span className="hidden sm:inline">· SEO &amp; content quality</span>
                   </p>
                 </div>
-              </div>
+              </a>
 
               {/* Desktop navigation */}
               <nav className="hidden md:flex items-stretch h-14 gap-1" aria-label="Primary">

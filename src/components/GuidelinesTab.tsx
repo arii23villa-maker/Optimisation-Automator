@@ -26,7 +26,9 @@ import {
   ExternalLink,
   BookOpen,
   HeartHandshake,
-  Network
+  Network,
+  Download,
+  Upload
 } from 'lucide-react';
 import { 
   ProductGuidelines, 
@@ -94,7 +96,10 @@ interface GuidelinesTabProps {
   onDeleteProfile: (profileId: string) => void;
   onDeleteAllProfiles?: () => void;
   onCreateBlankGuidelines?: () => void;
-  onImportProfiles: (imported: GuidelineProfile[]) => void;
+  /** Downloads every saved guideline (all six sections) as one JSON file. */
+  onExportGuidelines: () => void;
+  /** Adds the guidelines in an exported JSON file to this browser's. */
+  onImportGuidelines: (data: unknown) => void;
   onResetDefaults: () => void;
   onUpdateContentGuidelines: (updated: ContentGuidelines) => void;
   onUpdateProductGuidelines: (updated: ProductGuidelines) => void;
@@ -182,7 +187,8 @@ export const GuidelinesTab: React.FC<GuidelinesTabProps> = ({
   onDeleteProfile,
   onDeleteAllProfiles,
   onCreateBlankGuidelines,
-  onImportProfiles,
+  onExportGuidelines,
+  onImportGuidelines,
   onResetDefaults,
   onUpdateContentGuidelines,
   onUpdateProductGuidelines,
@@ -821,6 +827,42 @@ export const GuidelinesTab: React.FC<GuidelinesTabProps> = ({
         {/* Quick Actions */}
         <div className="flex flex-wrap items-center gap-2">
           <button
+            id="btn-export-guidelines"
+            onClick={onExportGuidelines}
+            className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center space-x-1.5 cursor-pointer"
+            title="Download every saved guideline (all six sections) as one file, to back them up or use them in another browser"
+          >
+            <Download className="w-3.5 h-3.5 text-slate-400" />
+            <span>Export</span>
+          </button>
+
+          <label
+            id="btn-import-guidelines"
+            className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center space-x-1.5 cursor-pointer"
+            title="Add the guidelines from an exported file. Guidelines already here are kept."
+          >
+            <Upload className="w-3.5 h-3.5 text-slate-400" />
+            <span>Import</span>
+            <input
+              type="file"
+              accept=".json,application/json"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                e.target.value = ''; // the same file can be picked again
+                if (!file) return;
+                let data: unknown = null;
+                try {
+                  data = JSON.parse(await file.text());
+                } catch {
+                  /* not JSON: reported by the import */
+                }
+                onImportGuidelines(data);
+              }}
+            />
+          </label>
+
+          <button
             id="btn-clear-all-guidelines"
             onClick={handleClearAllGuidelines}
             className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-rose-950/40 text-slate-300 hover:text-rose-300 border border-slate-700 hover:border-rose-800/60 transition flex items-center space-x-1.5 cursor-pointer"
@@ -839,6 +881,21 @@ export const GuidelinesTab: React.FC<GuidelinesTabProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Empty state: nothing is built in, so a new browser starts here */}
+      {[savedContentPresets, savedProductPresets, savedSeoPresets, savedGeoPresets, savedCustomerCentricityPresets, savedStructureMappingPresets].every((list) => !list?.length) && (
+        <div id="guidelines-empty-state" className="bg-indigo-950/30 border border-indigo-500/30 rounded-2xl p-4 text-xs text-slate-300 space-y-1.5">
+          <p className="text-sm font-semibold text-slate-100">No guidelines saved yet</p>
+          <p>
+            Fill in the sections below for one product (for example, Personal Loan) and click <strong className="text-slate-100">Save as New Guideline</strong> in
+            each section. Or click <strong className="text-slate-100">Import</strong> to load a file a teammate exported.
+          </p>
+          <p className="text-slate-400">
+            Until then the review gates use only the tool's own rules (no invented facts, no cut content, heading order, SEO basics). Anything in
+            Product guidelines counts as an approved fact the writer may publish, so add rates and fees only if they are current and approved.
+          </p>
+        </div>
+      )}
 
       {/* Quick Paste Modal / Drawer */}
       {pasteMode && (
@@ -950,6 +1007,7 @@ Or paste raw JSON schema...`}
                   }}
                   className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-purple-500 cursor-pointer max-w-[210px] truncate"
                 >
+                  <option value="">{savedContentPresets.length ? 'None selected' : 'None saved yet'}</option>
                   {savedContentPresets.map(preset => (
                     <option key={preset.id} value={preset.id}>
                       {preset.name} {preset.isBuiltIn ? '(Preset)' : '(Custom)'}
@@ -1216,6 +1274,7 @@ Or paste raw JSON schema...`}
                   }}
                   className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer max-w-[210px] truncate"
                 >
+                  <option value="">{savedProductPresets.length ? 'None selected' : 'None saved yet'}</option>
                   {savedProductPresets.map(preset => (
                     <option key={preset.id} value={preset.id}>
                       {preset.name} {preset.isBuiltIn ? '(Preset)' : '(Custom)'}
@@ -1551,6 +1610,7 @@ Or paste raw JSON schema...`}
                   }}
                   className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer max-w-[210px] truncate"
                 >
+                  <option value="">{savedSeoPresets.length ? 'None selected' : 'None saved yet'}</option>
                   {savedSeoPresets.map(preset => (
                     <option key={preset.id} value={preset.id}>
                       {preset.name} {preset.isBuiltIn ? '(Preset)' : '(Custom)'}
@@ -1841,6 +1901,7 @@ Or paste raw JSON schema...`}
                   }}
                   className="px-3 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer max-w-[210px] truncate"
                 >
+                  <option value="">{savedGeoPresets.length ? 'None selected' : 'None saved yet'}</option>
                   {savedGeoPresets.map(preset => (
                     <option key={preset.id} value={preset.id}>
                       {preset.name} {preset.isBuiltIn ? '(Preset)' : '(Custom)'}
@@ -2132,6 +2193,7 @@ Or paste raw JSON schema...`}
                   className="px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-xs font-semibold text-amber-300 focus:ring-1 focus:ring-amber-500 focus:outline-none cursor-pointer max-w-[210px] truncate"
                   title="Switch active Structure & Mapping preset"
                 >
+                  <option value="">{savedStructureMappingPresets.length ? 'None selected' : 'None saved yet'}</option>
                   {savedStructureMappingPresets.map((preset) => (
                     <option key={preset.id} value={preset.id}>
                       {preset.name} {preset.id === activeStructureMappingPresetId ? '✓' : ''}
@@ -2426,6 +2488,7 @@ Or paste raw JSON schema...`}
                   className="px-2.5 py-1.5 bg-slate-950 border border-slate-700 rounded-xl text-xs font-semibold text-rose-300 focus:ring-1 focus:ring-rose-500 focus:outline-none cursor-pointer max-w-[210px] truncate"
                   title="Switch active Customer Centricity preset"
                 >
+                  <option value="">{savedCustomerCentricityPresets.length ? 'None selected' : 'None saved yet'}</option>
                   {savedCustomerCentricityPresets.map((preset) => (
                     <option key={preset.id} value={preset.id}>
                       {preset.name} {preset.id === activeCustomerCentricityPresetId ? '✓' : ''}
@@ -2864,8 +2927,8 @@ Or paste raw JSON schema...`}
       {/* SECTION 7: TARGET KEYWORDS & SEARCH VOLUMES */}
       {/* ========================================================================= */}
       <div id="section-7-keywords" className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6 scroll-mt-20">
-        
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-800 pb-4">
           <div className="flex items-center space-x-3">
             <div className="p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400">
               <TrendingUp className="w-5 h-5" />

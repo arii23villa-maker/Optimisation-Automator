@@ -47,15 +47,34 @@ export function coercePageDraft(raw: any): PageDraft | null {
     })
     .filter((s: PageDraftSection) => s.h2);
 
+  const faqs: PageDraft['faqs'] = (Array.isArray(raw.faqs) ? raw.faqs : [])
+    .map((f: any) => ({ question: str(f?.question), answer: str(f?.answer) }))
+    .filter((f: any) => f.question && f.answer);
+
+  // The maker sometimes writes FAQs as an "FAQ" H2 section: one H3 per question, or "Question? Answer." lines.
+  // FAQs belong in `faqs` (rendered last, counted for coverage, used for the FAQPage schema), so move them there
+  // unchanged. Framing lines without a question ("Below are common questions…") are dropped with the section.
+  const addFaq = (question: string, answer: string) => {
+    if (question && answer && !faqs.some((f) => f.question.toLowerCase() === question.toLowerCase())) faqs.push({ question, answer });
+  };
+  const keptSections = sections.filter((s) => {
+    if (!/^(frequently asked questions|faqs?)\b/i.test(s.h2)) return true;
+    const inline = [...s.paragraphs, ...s.bullets]
+      .map((line) => line.match(/^([^?]{8,200}\?)\s+(.+)$/))
+      .filter((m): m is RegExpMatchArray => !!m);
+    if (s.h3s.length === 0 && inline.length === 0) return true;
+    s.h3s.forEach((h) => addFaq(h.h3, [...h.paragraphs, ...h.bullets].join(' ').trim()));
+    inline.forEach((m) => addFaq(m[1].trim(), m[2].trim()));
+    return false;
+  });
+
   const draft: PageDraft = {
     metaTitle: str(raw.metaTitle),
     metaDescription: str(raw.metaDescription),
     h1: str(raw.h1),
     intro: strList(raw.intro),
-    sections,
-    faqs: (Array.isArray(raw.faqs) ? raw.faqs : [])
-      .map((f: any) => ({ question: str(f?.question), answer: str(f?.answer) }))
-      .filter((f: any) => f.question && f.answer),
+    sections: keptSections,
+    faqs,
   };
 
   if (!draft.h1 || draft.sections.length === 0) return null;
@@ -108,6 +127,17 @@ export function draftPlainText(d: PageDraft): string {
 }
 
 const countWords = (s: string) => (s.trim() ? s.trim().split(/\s+/).length : 0);
+
+/**
+ * Words in the page body, without the FAQ section. Coverage is measured this way because FAQs often make up
+ * most of a page (60% on Insta EMI Card) and are counted separately, by number of questions.
+ */
+export function bodyWordCount(markdown: string): number {
+  const faqStart = markdown.search(/^#{1,6}\s*(frequently asked|faqs?\b)/im);
+  return countWords(faqStart >= 0 ? markdown.slice(0, faqStart) : markdown);
+}
+
+export const draftBodyWordCount = (d: PageDraft) => bodyWordCount(draftToMarkdown({ ...d, faqs: [] }));
 
 /**
  * Converts a draft into the unified "page_body_content" component the UI renders,
@@ -350,6 +380,17 @@ export function extractFigures(text: string): string[] {
     found.add(raw.replace(/\s+/g, ' '));
   }
   return [...found];
+}
+
+/**
+ * Web addresses and email addresses in the draft that don't occur in the source or approved facts. An invented
+ * link or email misleads readers as much as an invented number (the figure guard already covers phone numbers).
+ */
+export function findUnsupportedLinks(draftText: string, allowedText: string): string[] {
+  const norm = (v: string) => v.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/[.,;:!?)\]}'"]+$/, '').replace(/\/$/, '');
+  const allowed = allowedText.toLowerCase().replace(/https?:\/\//g, '').replace(/\bwww\./g, '');
+  const found = draftText.match(/\bhttps?:\/\/[^\s)\]}"'<>]+|\bwww\.[^\s)\]}"'<>]+|[\w.+-]+@[\w-]+(?:\.[\w-]+)+/gi) || [];
+  return Array.from(new Set(found.map((f) => f.replace(/[.,;:!?)\]}'"]+$/, '')))).filter((f) => !allowed.includes(norm(f)));
 }
 
 export function findUnsupportedFigures(draftText: string, allowedText: string): string[] {

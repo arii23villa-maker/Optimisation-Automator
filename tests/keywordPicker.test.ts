@@ -91,3 +91,15 @@ test("no numbers, brand fragments or nested near-duplicates", () => {
   assert.ok(!words.includes("personal loan interest"), "nested fragment dropped: " + words);
   assert.ok(words.includes("bajaj finance personal loan"), "one proper branded keyword: " + words);
 });
+
+test('no fragments that end mid-phrase ("personal loan based")', () => {
+  const kws = pickKeywords({
+    ...personalLoanPage,
+    bodyText:
+      `${personalLoanPage.bodyText}\nYour personal loan based on income is approved faster. A personal loan based on salary needs fewer documents. ` +
+      'Personal loan based offers depend on your profile. Charges apply according to the schedule.',
+  });
+  const words = kws.map((k) => k.keyword);
+  assert.ok(!words.some((k) => /\b(based|according)$/.test(k)), 'fragment picked: ' + words);
+  assert.ok(words.includes('documents required'), '"required" still ends a real keyword: ' + words);
+});

@@ -385,6 +385,8 @@ export interface AuditFlag {
   proposedFixPreview: string;
   subCategory?: 'EEAT' | 'GEO' | 'Structure' | 'Keyword' | 'Product' | 'Content';
   isGatingViolation?: boolean; // Regulatory gating violation (Product Guidelines)
+  /** Fixing it needs information that is not on the page (phone number, example calculation, author): for editors, not the maker. */
+  needsEditorInput?: boolean;
   fixed?: boolean;
   verificationVerdict?: 'ACCEPT' | 'REJECT' | 'ESCALATE' | 'PENDING';
   retryCount?: number;

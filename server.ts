@@ -3,10 +3,28 @@ import express from "express";
 import dns from "dns";
 import net from "net";
 import path from "path";
-import { createServer as createViteServer } from "vite";
+import fs from "fs";
 import { GoogleGenAI, Type } from "@google/genai";
 import * as cheerio from "cheerio";
-import { runAgent9OrchestrationPipeline } from "./src/services/agentPipeline";
+import { runPipelineStep, DATA_RULE, fenced } from "./src/services/agentPipeline";
+import {
+  UserFacingError,
+  assertPublicHttpUrl,
+  fetchPublic,
+  clientIp,
+  rateLimit,
+  createLockout,
+  securityHeaders,
+  contentSecurityPolicy,
+  inlineScriptHashes,
+  signCheckpoint,
+  verifyCheckpoint,
+  sitePasswordRequired,
+  passwordMatches as secretMatches,
+  newSessionCookie,
+  clearSessionCookie,
+  hasValidSession,
+} from "./src/services/security";
 import { generate as generateLlm, extractJson, llmAvailable, configuredProviders, type LlmJob } from "./src/services/llm";
 import { recordFirecrawl, recordRun } from "./src/services/usageStore";
 import { computeAdminMetrics } from "./src/services/adminMetrics";
@@ -33,7 +51,7 @@ import {
 
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 // CORS & Preflight Middleware for embedded iframe and cross-origin safety
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || "")
@@ -55,8 +73,48 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.disable("x-powered-by");
+app.use(securityHeaders);
+
+// Vercel caps a request body at 4.5 MB; pasted HTML pages fit well under 4 MB.
+app.use(express.json({ limit: "4mb" }));
+app.use(express.urlencoded({ extended: true, limit: "4mb" }));
+
+// Per-IP rate limits: every model call spends the owner's free quota, so scripted calls are slowed down.
+const TEN_MIN = 10 * 60 * 1000;
+app.use("/api/", rateLimit("API", 600, TEN_MIN));
+app.use(["/api/fetch-url", "/api/discover-sitemap"], rateLimit("page fetches", 60, TEN_MIN));
+app.use(["/api/extract-keywords", "/api/optimize-h2s", "/api/google-ads"], rateLimit("keyword tools", 60, TEN_MIN));
+// A run takes a few requests (checkpoints); only new runs count.
+app.use(["/api/run-pipeline", "/api/orchestrate"], rateLimit("pipeline runs", 30, 60 * 60 * 1000, (req) => !req.body?.resume));
+
+// Optional site password (APP_PASSWORD). Without it the tool is open to anyone who can reach it, so on Vercel
+// use Vercel Authentication. The landing page and /api/health stay public; /admin has its own password.
+const siteLockout = createLockout(10, 15 * 60 * 1000);
+const secureCookies = () => process.env.VERCEL === "1" || process.env.NODE_ENV === "production";
+app.get("/api/session", (req, res) => {
+  res.json({ required: sitePasswordRequired(), ok: !sitePasswordRequired() || hasValidSession(req) });
+});
+app.post("/api/session", (req, res) => {
+  if (!sitePasswordRequired()) return res.json({ required: false, ok: true });
+  const ip = clientIp(req);
+  if (siteLockout.locked(ip)) return res.status(429).json({ error: "Too many wrong passwords. Try again in 15 minutes." });
+  if (!secretMatches(req.body?.password, (process.env.APP_PASSWORD || "").trim())) {
+    siteLockout.fail(ip);
+    return res.status(401).json({ error: "Wrong password." });
+  }
+  siteLockout.clear(ip);
+  res.setHeader("Set-Cookie", newSessionCookie(secureCookies()));
+  res.json({ required: true, ok: true });
+});
+app.delete("/api/session", (_req, res) => {
+  res.setHeader("Set-Cookie", clearSessionCookie(secureCookies()));
+  res.json({ ok: true });
+});
+app.use("/api/", (req, res, next) => {
+  if (!sitePasswordRequired() || /^\/(health|session|admin)(\/|$)/.test(req.path) || hasValidSession(req)) return next();
+  res.status(401).json({ error: "Sign in to use the tool.", loginRequired: true, status: 401 });
+});
 
 // Health check endpoint
 app.get("/api/health", (_req, res) => {
@@ -547,53 +605,6 @@ async function mapWithFirecrawl(targetUrl: string): Promise<string[]> {
 // ----------------------------------------------------
 // URL SAFETY: only public http(s) targets may be fetched by the server.
 // ----------------------------------------------------
-class UserFacingError extends Error {
-  status: number;
-  constructor(message: string, status = 422) {
-    super(message);
-    this.status = status;
-  }
-}
-
-function isPrivateAddress(ip: string): boolean {
-  if (net.isIPv4(ip)) {
-    const [a, b] = ip.split(".").map(Number);
-    return (
-      a === 10 || a === 127 || a === 0 ||
-      (a === 169 && b === 254) ||
-      (a === 172 && b >= 16 && b <= 31) ||
-      (a === 192 && b === 168) ||
-      (a === 100 && b >= 64 && b <= 127)
-    );
-  }
-  const v6 = ip.toLowerCase();
-  if (v6.startsWith("::ffff:")) return isPrivateAddress(v6.slice(7));
-  return v6 === "::1" || v6 === "::" || v6.startsWith("fc") || v6.startsWith("fd") || v6.startsWith("fe80");
-}
-
-async function assertPublicHttpUrl(rawUrl: string): Promise<URL> {
-  let u: URL;
-  try {
-    u = new URL(rawUrl);
-  } catch {
-    throw new UserFacingError("That is not a valid URL.", 400);
-  }
-  if (!["http:", "https:"].includes(u.protocol)) {
-    throw new UserFacingError("Only http and https URLs can be fetched.", 400);
-  }
-  const host = u.hostname.replace(/^\[|\]$/g, "");
-  if (/^localhost$|\.localhost$|\.local$|\.internal$/i.test(host)) {
-    throw new UserFacingError("Internal hosts cannot be fetched. Use Paste HTML for intranet or staging pages.", 400);
-  }
-  const addrs = net.isIP(host) ? [host] : (await dns.promises.lookup(host, { all: true }).catch(() => [])).map((a: any) => a.address);
-  if (addrs.length === 0) {
-    throw new UserFacingError(`Could not resolve ${host}. Check the URL.`, 400);
-  }
-  if (addrs.some(isPrivateAddress)) {
-    throw new UserFacingError("This URL points to a private network address. Use Paste HTML for intranet or staging pages.", 400);
-  }
-  return u;
-}
 
 // Multi-Tier Resilient Web Fetcher (Powered by Agent 1 Firecrawl with multi-tier fallback)
 async function fetchPageHtmlWithMultiFallback(targetUrl: string): Promise<{
@@ -636,7 +647,7 @@ async function fetchPageHtmlWithMultiFallback(targetUrl: string): Promise<{
 
   // Strategy 1: Modern Desktop Chrome Browser
   try {
-    const res = await fetch(targetUrl, {
+    const res = await fetchPublic(targetUrl, {
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
@@ -673,7 +684,7 @@ async function fetchPageHtmlWithMultiFallback(targetUrl: string): Promise<{
 
   // Strategy 2: Googlebot Crawler UA (passes through crawler-friendly CDN firewall rules)
   try {
-    const res = await fetch(targetUrl, {
+    const res = await fetchPublic(targetUrl, {
       headers: {
         "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -784,7 +795,7 @@ async function findSitemapUrls(startUrl: string): Promise<string[]> {
     // 1. Check robots.txt for Sitemap directives
     try {
       const robotsUrl = `${root}/robots.txt`;
-      const res = await fetch(robotsUrl, {
+      const res = await fetchPublic(robotsUrl, {
         headers: {
           "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
           "Accept": "text/plain,*/*",
@@ -823,7 +834,7 @@ async function parseSitemapXml(sitemapUrl: string, seen: Set<string> = new Set()
 
   const urls: string[] = [];
   try {
-    const res = await fetch(sitemapUrl, {
+    const res = await fetchPublic(sitemapUrl, {
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
         "Accept": "text/xml,application/xml,text/html,*/*",
@@ -2225,11 +2236,13 @@ For each keyword, determine:
 - priority: 'primary' (for H1 & Title), 'secondary' (for H2 feature sections), 'voice_question' (for conversational H3 voice answers), or 'lsi' (for body semantics)
 - notes: concise strategic guidance for heading or copy placement
 
-Page Title: ${title || ''}
+${DATA_RULE}
+
+${fenced('PAGE', `Page Title: ${title || ''}
 Page Description: ${description || ''}
 Page Headings: ${JSON.stringify((headings || []).slice(0, 10))}
 Tags: ${JSON.stringify(tags || [])}
-Body Content Sample: ${String(bodyText || '').slice(0, 6000)}
+Body Content Sample: ${String(bodyText || '').slice(0, 6000)}`)}
 
 Return strict JSON array of objects with fields: id, keyword, searchVolume, intent, priority, notes.
 `;
@@ -2352,7 +2365,8 @@ ${JSON.stringify(productGuidelines, null, 2)}
 ${JSON.stringify(keywords, null, 2)}
 
 --- EXISTING H2 HEADINGS ---
-${JSON.stringify(extractedH2s, null, 2)}
+${DATA_RULE}
+${fenced('PAGE H2 SECTIONS', JSON.stringify(extractedH2s, null, 2))}
 
 Optimization Mode: ${mode || "balanced"}
 
@@ -2443,6 +2457,17 @@ Return STRICT JSON array of objects according to the schema.
 // ----------------------------------------------------
 // 6. NINE-AGENT AUTONOMOUS ORCHESTRATION PIPELINE (AGENT 9)
 // ----------------------------------------------------
+
+/**
+ * Seconds one /api/run-pipeline request may work before it hands back a checkpoint (0 = no limit).
+ * On Vercel a request is killed at the function's max duration (FUNCTION_MAX_DURATION, default 300),
+ * so stop 20 s before it. Elsewhere PIPELINE_STEP_SECONDS can simulate that locally.
+ */
+function pipelineStepSeconds(): number {
+  if (process.env.VERCEL === "1") return (Number(process.env.FUNCTION_MAX_DURATION) || 300) - 20;
+  return Number(process.env.PIPELINE_STEP_SECONDS) || 0;
+}
+
 app.post(["/api/run-pipeline", "/api/orchestrate"], async (req, res) => {
   const {
     url,
@@ -2462,9 +2487,17 @@ app.post(["/api/run-pipeline", "/api/orchestrate"], async (req, res) => {
     stream,
     mode,
     reviseScope,
+    resume,
   } = req.body;
 
-  // With stream=true the response is NDJSON: {"type":"progress",...} lines, then one {"type":"result",...} line.
+  // With stream=true the response is NDJSON: {"type":"progress",...} lines, then one {"type":"result",...} line,
+  // or, when the request's time is up, one {"type":"checkpoint","checkpoint":{...}} line: the client sends the
+  // same body again with `resume: checkpoint` to continue the run.
+  // Checked before any streaming starts (afterwards an error can no longer be sent). The checkpoint travels through the browser; only one this server signed is accepted.
+  const resumed = resume ? verifyCheckpoint<any>(resume) : null;
+  if (resume && !resumed) {
+    return res.status(400).json({ error: "The saved pipeline progress could not be verified. Run the pipeline again.", status: 400 });
+  }
   const streaming = stream === true;
   const send = (obj: unknown) => {
     if (!res.writableEnded) res.write(JSON.stringify(obj) + "\n");
@@ -2478,11 +2511,14 @@ app.post(["/api/run-pipeline", "/api/orchestrate"], async (req, res) => {
   }
 
   const runStarted = Date.now();
-  const runId = `run-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const runId = (resumed && typeof resumed.runId === "string" && resumed.runId) || `run-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   const runPageUrl = url || backendData?.canonicalUrl;
+  const budgetSeconds = pipelineStepSeconds();
   try {
-    const pipelineResult = await runAgent9OrchestrationPipeline({
+    const step = await runPipelineStep({
       runId,
+      resume: resumed || undefined,
+      deadline: budgetSeconds ? runStarted + budgetSeconds * 1000 : undefined,
       url,
       rawHtml,
       productGuidelines,
@@ -2501,6 +2537,15 @@ app.post(["/api/run-pipeline", "/api/orchestrate"], async (req, res) => {
       reviseScope: reviseScope && typeof reviseScope.kind === "string" ? reviseScope : undefined,
       onProgress: streaming ? (event) => send({ type: "progress", event }) : undefined,
     });
+
+    if ("checkpoint" in step) {
+      if (streaming) {
+        send({ type: "checkpoint", checkpoint: signCheckpoint(step.checkpoint) });
+        return res.end();
+      }
+      return res.json({ success: true, checkpoint: signCheckpoint(step.checkpoint) });
+    }
+    const pipelineResult = step.result;
 
     // Categorize flag counts for dashboard consumption
     const flags = pipelineResult.deduplicatedFlags || [];
@@ -2561,7 +2606,7 @@ app.post(["/api/run-pipeline", "/api/orchestrate"], async (req, res) => {
       scope: reviseScope?.kind,
       verdict: pipelineResult.finalVerdict,
       drafts: pipelineResult.report.rounds?.length || 0,
-      durationMs: Date.now() - runStarted,
+      durationMs: pipelineResult.report.totalDurationMs,
       scoreBefore: pipelineResult.beforeScores?.overallScore,
       scoreAfter: pipelineResult.afterScores?.overallScore,
     });
@@ -2635,27 +2680,24 @@ const passwordMatches = (given: unknown) =>
   typeof given === "string" && !!adminPassword() && crypto.timingSafeEqual(sha(given), sha(adminPassword()));
 
 // Simple brute-force brake: 10 wrong passwords per IP per 15 minutes.
-const adminFailures = new Map<string, { count: number; since: number }>();
+const adminLockout = createLockout(10, 15 * 60 * 1000);
 function adminGuard(req: express.Request, res: express.Response): boolean {
   if (!adminPassword()) {
     res.status(503).json({ error: "The admin panel is disabled. Set ADMIN_PASSWORD in .env and restart the server." });
     return false;
   }
-  const ip = req.ip || "unknown";
-  const f = adminFailures.get(ip);
-  if (f && f.count >= 10 && Date.now() - f.since < 15 * 60 * 1000) {
+  const ip = clientIp(req);
+  if (adminLockout.locked(ip)) {
     res.status(429).json({ error: "Too many wrong passwords. Try again in 15 minutes." });
     return false;
   }
   const given = req.get("x-admin-password") ?? req.body?.password;
   if (!passwordMatches(given)) {
-    const cur = f && Date.now() - f.since < 15 * 60 * 1000 ? f : { count: 0, since: Date.now() };
-    cur.count++;
-    adminFailures.set(ip, cur);
+    adminLockout.fail(ip);
     res.status(401).json({ error: "Wrong admin password." });
     return false;
   }
-  adminFailures.delete(ip);
+  adminLockout.clear(ip);
   return true;
 }
 
@@ -2735,6 +2777,8 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 // ----------------------------------------------------
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
+    // Imported here so the production and Vercel bundles don't carry Vite.
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
@@ -2742,6 +2786,17 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), "dist");
+    // Strict Content-Security-Policy for the built site (the dev server needs inline scripts, so not there).
+    let csp = contentSecurityPolicy();
+    try {
+      csp = contentSecurityPolicy(inlineScriptHashes(fs.readFileSync(path.join(distPath, "index.html"), "utf8")));
+    } catch {
+      /* no build yet */
+    }
+    app.use((req, res, next) => {
+      if (!req.path.startsWith("/api/")) res.setHeader("Content-Security-Policy", csp);
+      next();
+    });
     app.use(express.static(distPath));
     app.get("*", (req, res) => {
       res.sendFile(path.join(distPath, "index.html"));
@@ -2756,4 +2811,8 @@ async function startServer() {
   server.headersTimeout = 15 * 60 * 1000 + 1000;
 }
 
-startServer();
+// On Vercel the app runs as a function (see scripts/build-vercel.mjs) and the
+// static site is served by Vercel's CDN, so there is no server to start.
+if (process.env.VERCEL !== "1") startServer();
+
+export default app;

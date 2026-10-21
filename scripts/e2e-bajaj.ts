@@ -5,20 +5,29 @@
  *   2. npm run test:e2e       (in another)
  *
  * Options (env): BASE_URL (default http://localhost:3000), E2E_PAGES (comma-separated keys or URLs),
- * E2E_REPORT (default docs/E2E-REPORT.md), E2E_MAX_REVISIONS (default 1).
+ * E2E_REPORT (default docs/E2E-REPORT.md), E2E_MAX_REVISIONS (default 1; the app's default is 2),
+ * E2E_GUIDELINES (default tests/fixtures/bajaj-guidelines.json: an exported guidelines file),
+ * VERCEL_BYPASS_SECRET (to test a Vercel deployment behind Deployment Protection: the
+ * "Protection Bypass for Automation" secret from the Vercel project settings).
  *
  * What runs depends on configured integrations (GET /api/health):
  *   - always: fetch + extraction, keyword picker, baseline audit by gates 2-6, verdict handling
  *   - with GEMINI_API_KEY: maker drafts, gate loop, verification gate, and a scoped meta revision
  */
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { BAJAJ_PROFILES } from '../src/data/defaultProfiles';
-import { checkHeadingStructure, findUnsupportedFigures, parseSchemaBlocks } from '../src/services/pageDraft';
+import type { GuidelineProfile } from '../src/types';
+import { bodyWordCount, checkHeadingStructure, findUnsupportedFigures, parseSchemaBlocks } from '../src/services/pageDraft';
+
+// The app has no built-in guidelines; the test uses the Bajaj Finserv ones from this fixture (an export file).
+const FIXTURE = process.env.E2E_GUIDELINES || 'tests/fixtures/bajaj-guidelines.json';
+const BAJAJ_PROFILES: GuidelineProfile[] = JSON.parse(readFileSync(FIXTURE, 'utf8')).profiles;
 
 const BASE = (process.env.BASE_URL || 'http://localhost:3000').replace(/\/$/, '');
 const REPORT = process.env.E2E_REPORT || 'docs/E2E-REPORT.md';
 const MAX_REVISIONS = Number(process.env.E2E_MAX_REVISIONS || 1);
+const BYPASS = (process.env.VERCEL_BYPASS_SECRET || '').trim();
+const AUTH_HEADERS: Record<string, string> = BYPASS ? { 'x-vercel-protection-bypass': BYPASS } : {};
 
 const B = 'https://www.bajajfinserv.in';
 const PAGES: Record<string, { url: string; profile: string; type: 'product' | 'blog' | 'article' }> = {
@@ -53,7 +62,7 @@ type PageResult = { key: string; url: string; checks: Check[]; summary: Record<s
 async function postJson(path: string, body: unknown, timeoutMs = 180_000): Promise<any> {
   const res = await fetch(`${BASE}${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...AUTH_HEADERS },
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(timeoutMs),
   });
@@ -68,20 +77,36 @@ async function postJson(path: string, body: unknown, timeoutMs = 180_000): Promi
   return json;
 }
 
-async function runPipeline(body: any): Promise<{ result: any; events: any[] }> {
-  const res = await fetch(`${BASE}/api/run-pipeline`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ...body, stream: true }),
-    signal: AbortSignal.timeout(20 * 60_000),
-  });
-  if (!res.ok || !res.body) throw new Error(`run-pipeline HTTP ${res.status}`);
-  const text = await res.text();
-  const lines = text.trim().split('\n').map((l) => JSON.parse(l));
-  const err = lines.find((l) => l.type === 'error');
-  if (err) throw new Error(err.error);
-  return { result: lines.find((l) => l.type === 'result')?.result, events: lines.filter((l) => l.type === 'progress').map((l) => l.event) };
+/** Runs the pipeline like the UI does: continues from checkpoints until there is a result. */
+async function runPipeline(body: any): Promise<{ result: any; events: any[]; requests: number; longestRequestSeconds: number }> {
+  const events: any[] = [];
+  let resume: unknown;
+  let longest = 0;
+  for (let requests = 1; requests <= 30; requests++) {
+    const started = Date.now();
+    const res = await fetch(`${BASE}/api/run-pipeline`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...AUTH_HEADERS },
+      body: JSON.stringify({ ...body, resume, stream: true }),
+      signal: AbortSignal.timeout(20 * 60_000),
+    });
+    if (!res.ok || !res.body) throw new Error(`run-pipeline HTTP ${res.status}`);
+    const text = await res.text();
+    longest = Math.max(longest, Math.round((Date.now() - started) / 1000));
+    const lines = text.trim().split('\n').map((l) => JSON.parse(l));
+    const err = lines.find((l) => l.type === 'error');
+    if (err) throw new Error(err.error);
+    events.push(...lines.filter((l) => l.type === 'progress').map((l) => l.event));
+    const result = lines.find((l) => l.type === 'result')?.result;
+    if (result) return { result, events, requests, longestRequestSeconds: longest };
+    resume = lines.find((l) => l.type === 'checkpoint')?.checkpoint;
+    if (!resume) throw new Error('run-pipeline ended without a result or checkpoint');
+  }
+  throw new Error('run-pipeline did not finish within 30 requests');
 }
+
+/** Vercel Hobby stops a request after 300 s; every request of a run must finish before that. */
+const REQUEST_LIMIT_SECONDS = Number(process.env.E2E_REQUEST_LIMIT_SECONDS || 300);
 
 function guidelinesFor(profileId: string) {
   const p = BAJAJ_PROFILES.find((x) => x.id === profileId)!;
@@ -143,7 +168,7 @@ async function testPage(key: string, url: string, profileId: string, gemini: boo
   check('No brand-only keyword', !kws.some((k) => /^bajaj( finserv| finance)?$/i.test(k.keyword)), '');
 
   // 3. Full pipeline with the vertical's guidelines.
-  const { result, events } = await runPipeline({
+  const { result, events, requests, longestRequestSeconds } = await runPipeline({
     url,
     backendData: fetched.backend,
     components: fetched.components,
@@ -153,6 +178,8 @@ async function testPage(key: string, url: string, profileId: string, gemini: boo
   });
   const report = result.report;
   summary.verdict = result.finalVerdict;
+  summary.requests = `${requests} (longest ${longestRequestSeconds}s)`;
+  check(`Every request under ${REQUEST_LIMIT_SECONDS}s (Vercel limit)`, longestRequestSeconds < REQUEST_LIMIT_SECONDS, `${requests} requests, longest ${longestRequestSeconds}s`);
   summary.baselineGates = (report.baselineGates || []).map((x: any) => `${x.gateName.replace(' gate', '')} ${x.score}`).join(', ');
   summary.baselineFindings = (report.baselineGates || [])
     .flatMap((x: any) => x.flags.filter((fl: any) => fl.severity !== 'passed').map((fl: any) => `[${x.gateName.replace(' gate', '')} · ${fl.severity}] ${fl.issueTitle}`))
@@ -187,6 +214,15 @@ async function testPage(key: string, url: string, profileId: string, gemini: boo
       const sourceText = `${body}\n${fetched.backend?.metaTitle}\n${fetched.backend?.metaDescription}\n${fetched.backend?.schemaJsonLd}`;
       const invented = findUnsupportedFigures(md, `${sourceText}\n${JSON.stringify(g.productGuidelines)}`);
       check('No figures absent from the source', invented.length === 0, invented.join(', ') || 'none');
+      // Coverage: the rewrite keeps the source's substance (wording and structure are the maker's call).
+      const sourceWords = bodyWordCount(body);
+      const draftWords = bodyWordCount(md);
+      summary.bodyWordsAfter = `${draftWords} (source body ${sourceWords}, FAQs not counted)`;
+      check('Keeps most of the source body (≥ 70% of its words)', draftWords >= sourceWords * 0.7, `${draftWords} of ${sourceWords} words (${Math.round((draftWords / Math.max(1, sourceWords)) * 100)}%)`);
+      const sourceFaqs = (fetched.components?.[0]?.faqs || []).length;
+      const draftFaqs = (selected.draft?.faqs || []).length;
+      summary.faqsAfter = `${draftFaqs} (source ${sourceFaqs})`;
+      if (sourceFaqs) check('Keeps most of the source FAQs (≥ 60%)', draftFaqs >= sourceFaqs * 0.6, `${draftFaqs} of ${sourceFaqs}`);
       const t = result.updatedBackend.metaTitle || '';
       check('Meta title length 50-60', t.length >= 50 && t.length <= 60, `${t.length} chars: ${t}`);
       const brand = g.productGuidelines.brandName;
@@ -273,7 +309,7 @@ function renderReport(results: PageResult[], health: any): string {
 }
 
 async function main() {
-  const health = await fetch(`${BASE}/api/health`).then((r) => r.json());
+  const health = await fetch(`${BASE}/api/health`, { headers: AUTH_HEADERS }).then((r) => r.json());
   const gemini = !!health.integrations?.gemini;
   const selection = (process.env.E2E_PAGES || DEFAULT_SET.join(','))
     .split(',')

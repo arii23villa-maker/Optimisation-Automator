@@ -255,7 +255,9 @@ export const ScrapeFixTab: React.FC<ScrapeFixTabProps> = ({
             <div>
               <h2 className="text-sm font-semibold text-slate-100">Active guidelines</h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                The review gates audit the maker draft against these presets. Edit them in the Guidelines tab.
+                {[savedContentPresets, savedProductPresets, savedSeoPresets, savedGeoPresets, savedStructureMappingPresets, savedCustomerCentricityPresets].every((list) => !list?.length)
+                  ? 'No guidelines saved yet, so the gates check only the tool\'s own rules (no invented facts, no cut content, heading order, SEO basics). Add your guidelines in the Guidelines tab.'
+                  : 'The review gates audit the maker draft against these presets. Edit them in the Guidelines tab.'}
               </p>
             </div>
           </div>
@@ -304,7 +306,7 @@ export const ScrapeFixTab: React.FC<ScrapeFixTabProps> = ({
                 <FileText className="w-3 h-3" /> Content
               </span>
               <span className="text-[11px] text-slate-400 truncate max-w-[80px]" title={contentGuidelines?.toneOfVoice}>
-                {contentGuidelines?.toneOfVoice ? contentGuidelines.toneOfVoice.split(',')[0] : 'Authoritative'}
+                {contentGuidelines?.toneOfVoice ? contentGuidelines.toneOfVoice.split(',')[0] : 'Not set'}
               </span>
             </div>
             <select
@@ -312,6 +314,7 @@ export const ScrapeFixTab: React.FC<ScrapeFixTabProps> = ({
               onChange={(e) => onSelectContentPreset?.(e.target.value)}
               className="w-full px-2 py-1 bg-slate-900 border border-slate-700/80 rounded text-[12px] text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer truncate"
             >
+              <option value="">{savedContentPresets.length ? 'None selected' : 'None saved yet'}</option>
               {savedContentPresets.map(preset => (
                 <option key={preset.id} value={preset.id}>
                   {preset.name} {preset.isBuiltIn ? '(Preset)' : '(Custom)'}
@@ -335,6 +338,7 @@ export const ScrapeFixTab: React.FC<ScrapeFixTabProps> = ({
               onChange={(e) => onSelectProductPreset?.(e.target.value)}
               className="w-full px-2 py-1 bg-slate-900 border border-slate-700/80 rounded text-[12px] text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer truncate"
             >
+              <option value="">{savedProductPresets.length ? 'None selected' : 'None saved yet'}</option>
               {savedProductPresets.map(preset => (
                 <option key={preset.id} value={preset.id}>
                   {preset.name} {preset.isBuiltIn ? '(Preset)' : '(Custom)'}
@@ -358,6 +362,7 @@ export const ScrapeFixTab: React.FC<ScrapeFixTabProps> = ({
               onChange={(e) => onSelectSeoPreset?.(e.target.value)}
               className="w-full px-2 py-1 bg-slate-900 border border-slate-700/80 rounded text-[12px] text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer truncate"
             >
+              <option value="">{savedSeoPresets.length ? 'None selected' : 'None saved yet'}</option>
               {savedSeoPresets.map(preset => (
                 <option key={preset.id} value={preset.id}>
                   {preset.name} {preset.isBuiltIn ? '(Preset)' : '(Custom)'}
@@ -381,6 +386,7 @@ export const ScrapeFixTab: React.FC<ScrapeFixTabProps> = ({
               onChange={(e) => onSelectGeoPreset?.(e.target.value)}
               className="w-full px-2 py-1 bg-slate-900 border border-slate-700/80 rounded text-[12px] text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer truncate"
             >
+              <option value="">{savedGeoPresets.length ? 'None selected' : 'None saved yet'}</option>
               {savedGeoPresets.map(preset => (
                 <option key={preset.id} value={preset.id}>
                   {preset.name} {preset.isBuiltIn ? '(Preset)' : '(Custom)'}
@@ -404,6 +410,7 @@ export const ScrapeFixTab: React.FC<ScrapeFixTabProps> = ({
               onChange={(e) => onSelectStructureMappingPreset?.(e.target.value)}
               className="w-full px-2 py-1 bg-slate-900 border border-slate-700/80 rounded text-[12px] text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer truncate"
             >
+              <option value="">{savedStructureMappingPresets.length ? 'None selected' : 'None saved yet'}</option>
               {savedStructureMappingPresets.map(preset => (
                 <option key={preset.id} value={preset.id}>
                   {preset.name} {preset.isBuiltIn ? '(Preset)' : '(Custom)'}
@@ -427,6 +434,7 @@ export const ScrapeFixTab: React.FC<ScrapeFixTabProps> = ({
               onChange={(e) => onSelectCustomerCentricityPreset?.(e.target.value)}
               className="w-full px-2 py-1 bg-slate-900 border border-slate-700/80 rounded text-[12px] text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer truncate"
             >
+              <option value="">{savedCustomerCentricityPresets.length ? 'None selected' : 'None saved yet'}</option>
               {savedCustomerCentricityPresets.map(preset => (
                 <option key={preset.id} value={preset.id}>
                   {preset.name} {preset.isBuiltIn ? '(Preset)' : '(Custom)'}

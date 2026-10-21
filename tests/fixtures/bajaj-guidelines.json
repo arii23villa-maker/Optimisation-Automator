@@ -1,0 +1,2145 @@
+{
+  "format": "content-optimizer-guidelines",
+  "version": 2,
+  "exportedAt": "2026-10-21T00:00:00.000Z",
+  "note": "Test fixture for scripts/e2e-bajaj.ts: the Bajaj Finserv guidelines that used to be built into the app. Not loaded by the app.",
+  "profiles": [
+    {
+      "id": "bfl-profile-personal-loan",
+      "name": "Bajaj Finserv — Personal Loan",
+      "description": "Unsecured personal loans offered by Bajaj Finance Limited.",
+      "category": "bajaj_finserv",
+      "isBuiltIn": false,
+      "contentGuidelines": {
+        "toneOfVoice": "Clear, warm and trustworthy. Explain like a helpful relationship manager, not a salesperson.",
+        "readabilityLevel": "Class 8 reading level in Indian English; explain every financial term the first time it appears.",
+        "paragraphConstraints": "Maximum 3 sentences (about 60 words) per paragraph. One idea per paragraph.",
+        "formattingRules": [
+          "Write amounts with the ₹ symbol and Indian numbering (lakh, crore), e.g. ₹5 lakh.",
+          "Write rates as \"% p.a.\" and say whether they are fixed or floating.",
+          "Put fees and charges in a table with a \"subject to change\" note.",
+          "Open every H2 with a one or two sentence direct answer.",
+          "Use numbered steps for application and documentation processes."
+        ],
+        "forbiddenCliches": [
+          "game changer",
+          "one-stop solution",
+          "hassle-free",
+          "in today's fast-paced world",
+          "unlock your dreams",
+          "best in class",
+          "delve into"
+        ],
+        "grammarAndPerspective": "Second person (\"you\", \"your\"), active voice, present tense.",
+        "ctaStandards": "Specific, honest CTAs: \"Check your eligibility\", \"Apply online\", \"Calculate your EMI\", \"Read the Key Fact Statement\".",
+        "citationFormatting": "Name the source in the sentence (e.g. \"as per RBI guidelines\") and link to the official page.",
+        "customContentRules": "Never state a rate, fee, limit, tenure or approval time that is not on the current approved rate card. Keep mandatory disclaimers next to the claims they qualify."
+      },
+      "productGuidelines": {
+        "toneOfVoice": "Clear, reassuring, transparent and respectful; never pushy.",
+        "productName": "Personal Loan",
+        "brandName": "Bajaj Finance",
+        "category": "Lending — Unsecured personal loans",
+        "targetAudience": "Salaried and self-employed individuals in India planning a large expense or consolidating debt.",
+        "uniqueSellingPoints": [
+          "Online application",
+          "Flexible repayment tenure",
+          "Minimal documentation for eligible customers"
+        ],
+        "coreValueProps": [
+          "Clear eligibility criteria",
+          "Transparent fees and charges",
+          "Fast online process"
+        ],
+        "forbiddenPhrases": [
+          "guaranteed approval",
+          "approval guaranteed",
+          "100% approval",
+          "no credit check",
+          "lowest interest rate in india",
+          "zero risk",
+          "risk-free",
+          "free money"
+        ],
+        "complianceNotes": "Name the lender as \"Bajaj Finance Limited\" (an RBI-registered NBFC) where the lending entity is referenced; keep product names that contain \"Bajaj Finserv\" unchanged. Interest rates, fees and charges must be quoted only from the current approved rate card and described as \"subject to change\". Where rates are discussed, refer readers to the Key Fact Statement (KFS) and Annual Percentage Rate (APR). Loan approval is at the lender's discretion and subject to eligibility and documentation. Link to the grievance redressal page; mention the RBI Integrated Ombudsman Scheme where escalation is discussed.",
+        "eeatCredentials": "Lender: Bajaj Finance Limited, a non-banking financial company registered with the Reserve Bank of India."
+      },
+      "seoGuidelines": {
+        "voiceSearchOptimized": true,
+        "aeoDirectAnswerTarget": true,
+        "geoLlmCitationFocus": true,
+        "eeatStandard": "ymyl_strict",
+        "titleCharRange": {
+          "min": 52,
+          "max": 58
+        },
+        "metaDescCharRange": {
+          "min": 145,
+          "max": 158
+        },
+        "headingHierarchyRules": "H1 with primary entity name, H2 with question + topical modifier, H3 with evidence and data attribution.",
+        "schemaRequirements": [
+          "WebPage",
+          "BreadcrumbList",
+          "Organization",
+          "Article",
+          "Person",
+          "FAQPage"
+        ],
+        "sitemapGuidelines": "Daily changefreq, lastmod ISO-8601 timestamps, image tags included.",
+        "customRules": "Structured credentials, publication date, reviewer bio, and statutory licenses must be declared in JSON-LD and page markup."
+      },
+      "geoGuidelines": {
+        "enableGeoOptimization": true,
+        "blufDirectAnswerTarget": true,
+        "authoritativeStatistics": true,
+        "aiOverviewSnippetFormat": "definitive_paragraph",
+        "targetEngines": [
+          "google_aio",
+          "perplexity",
+          "chatgpt_search",
+          "gemini_research"
+        ],
+        "llmCitationStrategy": "Anchor authoritative source name, publication date, and methodology immediately following any numerical or regulatory claim.",
+        "entityDensityAndSchema": "Connect Primary Entity to parent Knowledge Graph entity using sameAs Wikidata and Crunchbase links.",
+        "brandQuotationStandard": "Incorporate verified corporate statements or executive quotes with credential attribution.",
+        "sourceVerificationStyle": "Direct inline citations linked to primary governmental, academic, or industry benchmark sources.",
+        "forbiddenAiPatterns": [
+          "as an ai language model",
+          "it is important to remember",
+          "in conclusion",
+          "furthermore without context"
+        ],
+        "customGeoRules": "Inject high-density factual answers in the first 45 words of every major section.",
+        "statDensityRequirement": "At least 1 verified metric or statistic per 150 words of body content.",
+        "directAnswerStandard": "40-50 word Bottom Line Up Front (BLUF) direct answers answering user search intent.",
+        "sourceAttributionStandard": "Formal regulatory, academic, or certified third-party audit reports.",
+        "multiPerspectiveRequirement": "Present structured comparison matrices or tables for LLM citation extraction."
+      },
+      "customerCentricityGuidelines": {
+        "targetCustomerPersona": "Credit-conscious consumers and families navigating critical financial or life decisions.",
+        "empathyAndTone": "Reassuring, compassionate, transparent, and non-judgmental. Eliminate sales pressure.",
+        "readingAccessibility": "8th-Grade layman readability (Flesch-Kincaid 60-70). Explain every financial/technical acronym immediately.",
+        "maxSentenceWords": 20,
+        "maxParagraphSentences": 3,
+        "corePainPointsToAddress": [
+          "Fear of hidden origination or processing fees",
+          "Anxiety about credit score hit during rate checks",
+          "Unclear repayment schedules or compounding interest",
+          "Unresponsive customer support during urgent disputes"
+        ],
+        "frictionPatternsToFlag": [
+          "Buried fee disclosures or asterisks without direct explanation",
+          "Aggressive countdown/false scarcity timers",
+          "Vague APR claims like \"Rates as low as...*\" without typical ranges",
+          "Complex run-on multi-clause sentences (>20 words)",
+          "Missing human contact phone or dispute assistance details"
+        ],
+        "decisionJourneyOrder": "1. Soft-Check Reassurance -> 2. Transparent Cost Calculator -> 3. Simple 3-Step Process -> 4. Clear FAQ & Human Support Access",
+        "objectionHandlingRules": [
+          "Proactively explain eligibility if credit score is below average",
+          "Directly state there are zero penalties for early prepayment or payoff",
+          "Clarify state licensing, security standards, and FDIC/partner bank backing"
+        ],
+        "trustAndReassuranceSignals": [
+          "\"No impact on credit score\" soft check badge",
+          "256-bit SSL bank-grade security encryption",
+          "Dedicated toll-free human phone support with hours",
+          "BBB / Trustpilot verified rating badge",
+          "Full statutory licensing & APR disclosure block"
+        ],
+        "scoringWeights": {
+          "laymanAccessibilityWeight": 30,
+          "objectionHandlingWeight": 25,
+          "frictionEliminationWeight": 25,
+          "journeyStructureWeight": 20
+        },
+        "customCustomerRules": "Every rate quote must display an illustrative APR example with representative loan terms and total repayment calculation."
+      },
+      "structureMappingGuidelines": {
+        "headingHierarchyRule": "Strict single H1 topic anchor -> H2 major search-volume chapters -> H3 conversational voice queries. Never skip heading levels (no H2 directly into H4).",
+        "requirePrimaryKeywordInH1": true,
+        "minKeywordFrequency": 2,
+        "maxKeywordDensityPercent": 2.8,
+        "targetKeywordsInHeadingsMinPercent": 80,
+        "headingWordCountLimit": {
+          "min": 4,
+          "max": 10
+        },
+        "voiceQuestionHeadingsTarget": 40,
+        "preferredSectionOrder": [
+          "Hero Definition & Core Search Intent (H1)",
+          "Key Benefits & Quantified Performance (H2)",
+          "How It Works / 3-Step Process (H2)",
+          "Feature Breakdown & Comparative Matrix (H2)",
+          "Frequent Voice Questions & Direct BLUF Answers (H2)",
+          "Customer Reviews & Verified Proof (H2)",
+          "Final Call to Action (H2)"
+        ],
+        "searchIntentMappingStrategy": "Primary high-volume commercial keywords mapped to H1 and first H2; secondary informational and voice question long-tail keywords mapped to H3 FAQ sections.",
+        "keywordDistributionRules": "Primary target keyword in H1, first paragraph, and at least one H2. Target secondary keywords distributed evenly across body sub-sections with no clustering.",
+        "customStructureRules": "Every question-based H2/H3 heading must be immediately followed by a concise 40-50 word direct answer paragraph suitable for voice assistants."
+      },
+      "keywords": [],
+      "readerContext": "Indian borrower comparing personal loan rates, eligibility and repayment before applying.",
+      "createdAt": "2026-10-20T00:00:00.000Z",
+      "updatedAt": "2026-10-20T00:00:00.000Z"
+    },
+    {
+      "id": "bfl-profile-business-loan",
+      "name": "Bajaj Finserv — Business Loan",
+      "description": "Business and MSME loans offered by Bajaj Finance Limited.",
+      "category": "bajaj_finserv",
+      "isBuiltIn": false,
+      "contentGuidelines": {
+        "toneOfVoice": "Clear, warm and trustworthy. Explain like a helpful relationship manager, not a salesperson.",
+        "readabilityLevel": "Class 8 reading level in Indian English; explain every financial term the first time it appears.",
+        "paragraphConstraints": "Maximum 3 sentences (about 60 words) per paragraph. One idea per paragraph.",
+        "formattingRules": [
+          "Write amounts with the ₹ symbol and Indian numbering (lakh, crore), e.g. ₹5 lakh.",
+          "Write rates as \"% p.a.\" and say whether they are fixed or floating.",
+          "Put fees and charges in a table with a \"subject to change\" note.",
+          "Open every H2 with a one or two sentence direct answer.",
+          "Use numbered steps for application and documentation processes."
+        ],
+        "forbiddenCliches": [
+          "game changer",
+          "one-stop solution",
+          "hassle-free",
+          "in today's fast-paced world",
+          "unlock your dreams",
+          "best in class",
+          "delve into"
+        ],
+        "grammarAndPerspective": "Second person (\"you\", \"your\"), active voice, present tense.",
+        "ctaStandards": "Specific, honest CTAs: \"Check your eligibility\", \"Apply online\", \"Calculate your EMI\", \"Read the Key Fact Statement\".",
+        "citationFormatting": "Name the source in the sentence (e.g. \"as per RBI guidelines\") and link to the official page.",
+        "customContentRules": "Never state a rate, fee, limit, tenure or approval time that is not on the current approved rate card. Keep mandatory disclaimers next to the claims they qualify."
+      },
+      "productGuidelines": {
+        "toneOfVoice": "Clear, reassuring, transparent and respectful; never pushy.",
+        "productName": "Business Loan",
+        "brandName": "Bajaj Finance",
+        "category": "Lending — Business & MSME loans",
+        "targetAudience": "Self-employed professionals, proprietors and MSME owners needing working capital or expansion funds.",
+        "uniqueSellingPoints": [
+          "Online application",
+          "Collateral-free options for eligible businesses",
+          "Flexible repayment"
+        ],
+        "coreValueProps": [
+          "Clear eligibility and documents list",
+          "Transparent charges",
+          "Repayment that fits business cash flow"
+        ],
+        "forbiddenPhrases": [
+          "guaranteed approval",
+          "approval guaranteed",
+          "100% approval",
+          "no credit check",
+          "lowest interest rate in india",
+          "zero risk",
+          "risk-free",
+          "free money"
+        ],
+        "complianceNotes": "Name the lender as \"Bajaj Finance Limited\" (an RBI-registered NBFC) where the lending entity is referenced; keep product names that contain \"Bajaj Finserv\" unchanged. Interest rates, fees and charges must be quoted only from the current approved rate card and described as \"subject to change\". Where rates are discussed, refer readers to the Key Fact Statement (KFS) and Annual Percentage Rate (APR). Loan approval is at the lender's discretion and subject to eligibility and documentation. Link to the grievance redressal page; mention the RBI Integrated Ombudsman Scheme where escalation is discussed. State GST/registration requirements exactly as listed on the approved eligibility page.",
+        "eeatCredentials": "Lender: Bajaj Finance Limited, a non-banking financial company registered with the Reserve Bank of India."
+      },
+      "seoGuidelines": {
+        "voiceSearchOptimized": true,
+        "aeoDirectAnswerTarget": true,
+        "geoLlmCitationFocus": true,
+        "eeatStandard": "ymyl_strict",
+        "titleCharRange": {
+          "min": 52,
+          "max": 58
+        },
+        "metaDescCharRange": {
+          "min": 145,
+          "max": 158
+        },
+        "headingHierarchyRules": "H1 with primary entity name, H2 with question + topical modifier, H3 with evidence and data attribution.",
+        "schemaRequirements": [
+          "WebPage",
+          "BreadcrumbList",
+          "Organization",
+          "Article",
+          "Person",
+          "FAQPage"
+        ],
+        "sitemapGuidelines": "Daily changefreq, lastmod ISO-8601 timestamps, image tags included.",
+        "customRules": "Structured credentials, publication date, reviewer bio, and statutory licenses must be declared in JSON-LD and page markup."
+      },
+      "geoGuidelines": {
+        "enableGeoOptimization": true,
+        "blufDirectAnswerTarget": true,
+        "authoritativeStatistics": true,
+        "aiOverviewSnippetFormat": "definitive_paragraph",
+        "targetEngines": [
+          "google_aio",
+          "perplexity",
+          "chatgpt_search",
+          "gemini_research"
+        ],
+        "llmCitationStrategy": "Anchor authoritative source name, publication date, and methodology immediately following any numerical or regulatory claim.",
+        "entityDensityAndSchema": "Connect Primary Entity to parent Knowledge Graph entity using sameAs Wikidata and Crunchbase links.",
+        "brandQuotationStandard": "Incorporate verified corporate statements or executive quotes with credential attribution.",
+        "sourceVerificationStyle": "Direct inline citations linked to primary governmental, academic, or industry benchmark sources.",
+        "forbiddenAiPatterns": [
+          "as an ai language model",
+          "it is important to remember",
+          "in conclusion",
+          "furthermore without context"
+        ],
+        "customGeoRules": "Inject high-density factual answers in the first 45 words of every major section.",
+        "statDensityRequirement": "At least 1 verified metric or statistic per 150 words of body content.",
+        "directAnswerStandard": "40-50 word Bottom Line Up Front (BLUF) direct answers answering user search intent.",
+        "sourceAttributionStandard": "Formal regulatory, academic, or certified third-party audit reports.",
+        "multiPerspectiveRequirement": "Present structured comparison matrices or tables for LLM citation extraction."
+      },
+      "customerCentricityGuidelines": {
+        "targetCustomerPersona": "Credit-conscious consumers and families navigating critical financial or life decisions.",
+        "empathyAndTone": "Reassuring, compassionate, transparent, and non-judgmental. Eliminate sales pressure.",
+        "readingAccessibility": "8th-Grade layman readability (Flesch-Kincaid 60-70). Explain every financial/technical acronym immediately.",
+        "maxSentenceWords": 20,
+        "maxParagraphSentences": 3,
+        "corePainPointsToAddress": [
+          "Fear of hidden origination or processing fees",
+          "Anxiety about credit score hit during rate checks",
+          "Unclear repayment schedules or compounding interest",
+          "Unresponsive customer support during urgent disputes"
+        ],
+        "frictionPatternsToFlag": [
+          "Buried fee disclosures or asterisks without direct explanation",
+          "Aggressive countdown/false scarcity timers",
+          "Vague APR claims like \"Rates as low as...*\" without typical ranges",
+          "Complex run-on multi-clause sentences (>20 words)",
+          "Missing human contact phone or dispute assistance details"
+        ],
+        "decisionJourneyOrder": "1. Soft-Check Reassurance -> 2. Transparent Cost Calculator -> 3. Simple 3-Step Process -> 4. Clear FAQ & Human Support Access",
+        "objectionHandlingRules": [
+          "Proactively explain eligibility if credit score is below average",
+          "Directly state there are zero penalties for early prepayment or payoff",
+          "Clarify state licensing, security standards, and FDIC/partner bank backing"
+        ],
+        "trustAndReassuranceSignals": [
+          "\"No impact on credit score\" soft check badge",
+          "256-bit SSL bank-grade security encryption",
+          "Dedicated toll-free human phone support with hours",
+          "BBB / Trustpilot verified rating badge",
+          "Full statutory licensing & APR disclosure block"
+        ],
+        "scoringWeights": {
+          "laymanAccessibilityWeight": 30,
+          "objectionHandlingWeight": 25,
+          "frictionEliminationWeight": 25,
+          "journeyStructureWeight": 20
+        },
+        "customCustomerRules": "Every rate quote must display an illustrative APR example with representative loan terms and total repayment calculation."
+      },
+      "structureMappingGuidelines": {
+        "headingHierarchyRule": "Strict single H1 topic anchor -> H2 major search-volume chapters -> H3 conversational voice queries. Never skip heading levels (no H2 directly into H4).",
+        "requirePrimaryKeywordInH1": true,
+        "minKeywordFrequency": 2,
+        "maxKeywordDensityPercent": 2.8,
+        "targetKeywordsInHeadingsMinPercent": 80,
+        "headingWordCountLimit": {
+          "min": 4,
+          "max": 10
+        },
+        "voiceQuestionHeadingsTarget": 40,
+        "preferredSectionOrder": [
+          "Hero Definition & Core Search Intent (H1)",
+          "Key Benefits & Quantified Performance (H2)",
+          "How It Works / 3-Step Process (H2)",
+          "Feature Breakdown & Comparative Matrix (H2)",
+          "Frequent Voice Questions & Direct BLUF Answers (H2)",
+          "Customer Reviews & Verified Proof (H2)",
+          "Final Call to Action (H2)"
+        ],
+        "searchIntentMappingStrategy": "Primary high-volume commercial keywords mapped to H1 and first H2; secondary informational and voice question long-tail keywords mapped to H3 FAQ sections.",
+        "keywordDistributionRules": "Primary target keyword in H1, first paragraph, and at least one H2. Target secondary keywords distributed evenly across body sub-sections with no clustering.",
+        "customStructureRules": "Every question-based H2/H3 heading must be immediately followed by a concise 40-50 word direct answer paragraph suitable for voice assistants."
+      },
+      "keywords": [],
+      "readerContext": "Small business owner who needs funds quickly and wants clear eligibility and costs.",
+      "createdAt": "2026-10-20T00:00:00.000Z",
+      "updatedAt": "2026-10-20T00:00:00.000Z"
+    },
+    {
+      "id": "bfl-profile-home-loan",
+      "name": "Bajaj Finserv — Home Loan",
+      "description": "Home loans. Titles use \"Bajaj Finance\" as on bajajfinserv.in; the lender named in disclosures is Bajaj Housing Finance Limited (verify per page).",
+      "category": "bajaj_finserv",
+      "isBuiltIn": false,
+      "contentGuidelines": {
+        "toneOfVoice": "Clear, warm and trustworthy. Explain like a helpful relationship manager, not a salesperson.",
+        "readabilityLevel": "Class 8 reading level in Indian English; explain every financial term the first time it appears.",
+        "paragraphConstraints": "Maximum 3 sentences (about 60 words) per paragraph. One idea per paragraph.",
+        "formattingRules": [
+          "Write amounts with the ₹ symbol and Indian numbering (lakh, crore), e.g. ₹5 lakh.",
+          "Write rates as \"% p.a.\" and say whether they are fixed or floating.",
+          "Put fees and charges in a table with a \"subject to change\" note.",
+          "Open every H2 with a one or two sentence direct answer.",
+          "Use numbered steps for application and documentation processes."
+        ],
+        "forbiddenCliches": [
+          "game changer",
+          "one-stop solution",
+          "hassle-free",
+          "in today's fast-paced world",
+          "unlock your dreams",
+          "best in class",
+          "delve into"
+        ],
+        "grammarAndPerspective": "Second person (\"you\", \"your\"), active voice, present tense.",
+        "ctaStandards": "Specific, honest CTAs: \"Check your eligibility\", \"Apply online\", \"Calculate your EMI\", \"Read the Key Fact Statement\".",
+        "citationFormatting": "Name the source in the sentence (e.g. \"as per RBI guidelines\") and link to the official page.",
+        "customContentRules": "Never state a rate, fee, limit, tenure or approval time that is not on the current approved rate card. Keep mandatory disclaimers next to the claims they qualify."
+      },
+      "productGuidelines": {
+        "toneOfVoice": "Clear, reassuring, transparent and respectful; never pushy.",
+        "productName": "Home Loan",
+        "brandName": "Bajaj Finance",
+        "category": "Lending — Home loans",
+        "targetAudience": "First-time and repeat home buyers, and borrowers looking to transfer an existing home loan.",
+        "uniqueSellingPoints": [
+          "Balance transfer option",
+          "Long repayment tenure",
+          "Online application and tracking"
+        ],
+        "coreValueProps": [
+          "Clear eligibility and property document requirements",
+          "Transparent processing charges",
+          "Guidance through the loan journey"
+        ],
+        "forbiddenPhrases": [
+          "guaranteed approval",
+          "approval guaranteed",
+          "100% approval",
+          "no credit check",
+          "lowest interest rate in india",
+          "zero risk",
+          "risk-free",
+          "free money"
+        ],
+        "complianceNotes": "Name the lender as \"Bajaj Housing Finance Limited\" (a housing finance company registered with the National Housing Bank) unless the page states otherwise. Quote rates only from the current approved rate card, state whether they are fixed or floating and \"subject to change\". Tax-benefit content must say benefits are as per prevailing tax laws and advise readers to consult a tax advisor. Approval is subject to eligibility, property documents and the lender's policies.",
+        "eeatCredentials": "Lender: Bajaj Housing Finance Limited, a housing finance company registered with the National Housing Bank."
+      },
+      "seoGuidelines": {
+        "voiceSearchOptimized": true,
+        "aeoDirectAnswerTarget": true,
+        "geoLlmCitationFocus": true,
+        "eeatStandard": "ymyl_strict",
+        "titleCharRange": {
+          "min": 52,
+          "max": 58
+        },
+        "metaDescCharRange": {
+          "min": 145,
+          "max": 158
+        },
+        "headingHierarchyRules": "H1 with primary entity name, H2 with question + topical modifier, H3 with evidence and data attribution.",
+        "schemaRequirements": [
+          "WebPage",
+          "BreadcrumbList",
+          "Organization",
+          "Article",
+          "Person",
+          "FAQPage"
+        ],
+        "sitemapGuidelines": "Daily changefreq, lastmod ISO-8601 timestamps, image tags included.",
+        "customRules": "Structured credentials, publication date, reviewer bio, and statutory licenses must be declared in JSON-LD and page markup."
+      },
+      "geoGuidelines": {
+        "enableGeoOptimization": true,
+        "blufDirectAnswerTarget": true,
+        "authoritativeStatistics": true,
+        "aiOverviewSnippetFormat": "definitive_paragraph",
+        "targetEngines": [
+          "google_aio",
+          "perplexity",
+          "chatgpt_search",
+          "gemini_research"
+        ],
+        "llmCitationStrategy": "Anchor authoritative source name, publication date, and methodology immediately following any numerical or regulatory claim.",
+        "entityDensityAndSchema": "Connect Primary Entity to parent Knowledge Graph entity using sameAs Wikidata and Crunchbase links.",
+        "brandQuotationStandard": "Incorporate verified corporate statements or executive quotes with credential attribution.",
+        "sourceVerificationStyle": "Direct inline citations linked to primary governmental, academic, or industry benchmark sources.",
+        "forbiddenAiPatterns": [
+          "as an ai language model",
+          "it is important to remember",
+          "in conclusion",
+          "furthermore without context"
+        ],
+        "customGeoRules": "Inject high-density factual answers in the first 45 words of every major section.",
+        "statDensityRequirement": "At least 1 verified metric or statistic per 150 words of body content.",
+        "directAnswerStandard": "40-50 word Bottom Line Up Front (BLUF) direct answers answering user search intent.",
+        "sourceAttributionStandard": "Formal regulatory, academic, or certified third-party audit reports.",
+        "multiPerspectiveRequirement": "Present structured comparison matrices or tables for LLM citation extraction."
+      },
+      "customerCentricityGuidelines": {
+        "targetCustomerPersona": "Credit-conscious consumers and families navigating critical financial or life decisions.",
+        "empathyAndTone": "Reassuring, compassionate, transparent, and non-judgmental. Eliminate sales pressure.",
+        "readingAccessibility": "8th-Grade layman readability (Flesch-Kincaid 60-70). Explain every financial/technical acronym immediately.",
+        "maxSentenceWords": 20,
+        "maxParagraphSentences": 3,
+        "corePainPointsToAddress": [
+          "Fear of hidden origination or processing fees",
+          "Anxiety about credit score hit during rate checks",
+          "Unclear repayment schedules or compounding interest",
+          "Unresponsive customer support during urgent disputes"
+        ],
+        "frictionPatternsToFlag": [
+          "Buried fee disclosures or asterisks without direct explanation",
+          "Aggressive countdown/false scarcity timers",
+          "Vague APR claims like \"Rates as low as...*\" without typical ranges",
+          "Complex run-on multi-clause sentences (>20 words)",
+          "Missing human contact phone or dispute assistance details"
+        ],
+        "decisionJourneyOrder": "1. Soft-Check Reassurance -> 2. Transparent Cost Calculator -> 3. Simple 3-Step Process -> 4. Clear FAQ & Human Support Access",
+        "objectionHandlingRules": [
+          "Proactively explain eligibility if credit score is below average",
+          "Directly state there are zero penalties for early prepayment or payoff",
+          "Clarify state licensing, security standards, and FDIC/partner bank backing"
+        ],
+        "trustAndReassuranceSignals": [
+          "\"No impact on credit score\" soft check badge",
+          "256-bit SSL bank-grade security encryption",
+          "Dedicated toll-free human phone support with hours",
+          "BBB / Trustpilot verified rating badge",
+          "Full statutory licensing & APR disclosure block"
+        ],
+        "scoringWeights": {
+          "laymanAccessibilityWeight": 30,
+          "objectionHandlingWeight": 25,
+          "frictionEliminationWeight": 25,
+          "journeyStructureWeight": 20
+        },
+        "customCustomerRules": "Every rate quote must display an illustrative APR example with representative loan terms and total repayment calculation."
+      },
+      "structureMappingGuidelines": {
+        "headingHierarchyRule": "Strict single H1 topic anchor -> H2 major search-volume chapters -> H3 conversational voice queries. Never skip heading levels (no H2 directly into H4).",
+        "requirePrimaryKeywordInH1": true,
+        "minKeywordFrequency": 2,
+        "maxKeywordDensityPercent": 2.8,
+        "targetKeywordsInHeadingsMinPercent": 80,
+        "headingWordCountLimit": {
+          "min": 4,
+          "max": 10
+        },
+        "voiceQuestionHeadingsTarget": 40,
+        "preferredSectionOrder": [
+          "Hero Definition & Core Search Intent (H1)",
+          "Key Benefits & Quantified Performance (H2)",
+          "How It Works / 3-Step Process (H2)",
+          "Feature Breakdown & Comparative Matrix (H2)",
+          "Frequent Voice Questions & Direct BLUF Answers (H2)",
+          "Customer Reviews & Verified Proof (H2)",
+          "Final Call to Action (H2)"
+        ],
+        "searchIntentMappingStrategy": "Primary high-volume commercial keywords mapped to H1 and first H2; secondary informational and voice question long-tail keywords mapped to H3 FAQ sections.",
+        "keywordDistributionRules": "Primary target keyword in H1, first paragraph, and at least one H2. Target secondary keywords distributed evenly across body sub-sections with no clustering.",
+        "customStructureRules": "Every question-based H2/H3 heading must be immediately followed by a concise 40-50 word direct answer paragraph suitable for voice assistants."
+      },
+      "keywords": [],
+      "readerContext": "Home buyer comparing lenders on rates, tenure, documents and balance transfer.",
+      "createdAt": "2026-10-20T00:00:00.000Z",
+      "updatedAt": "2026-10-20T00:00:00.000Z"
+    },
+    {
+      "id": "bfl-profile-gold-loan",
+      "name": "Bajaj Finserv — Gold Loan",
+      "description": "Loans against gold jewellery offered by Bajaj Finance Limited.",
+      "category": "bajaj_finserv",
+      "isBuiltIn": false,
+      "contentGuidelines": {
+        "toneOfVoice": "Clear, warm and trustworthy. Explain like a helpful relationship manager, not a salesperson.",
+        "readabilityLevel": "Class 8 reading level in Indian English; explain every financial term the first time it appears.",
+        "paragraphConstraints": "Maximum 3 sentences (about 60 words) per paragraph. One idea per paragraph.",
+        "formattingRules": [
+          "Write amounts with the ₹ symbol and Indian numbering (lakh, crore), e.g. ₹5 lakh.",
+          "Write rates as \"% p.a.\" and say whether they are fixed or floating.",
+          "Put fees and charges in a table with a \"subject to change\" note.",
+          "Open every H2 with a one or two sentence direct answer.",
+          "Use numbered steps for application and documentation processes."
+        ],
+        "forbiddenCliches": [
+          "game changer",
+          "one-stop solution",
+          "hassle-free",
+          "in today's fast-paced world",
+          "unlock your dreams",
+          "best in class",
+          "delve into"
+        ],
+        "grammarAndPerspective": "Second person (\"you\", \"your\"), active voice, present tense.",
+        "ctaStandards": "Specific, honest CTAs: \"Check your eligibility\", \"Apply online\", \"Calculate your EMI\", \"Read the Key Fact Statement\".",
+        "citationFormatting": "Name the source in the sentence (e.g. \"as per RBI guidelines\") and link to the official page.",
+        "customContentRules": "Never state a rate, fee, limit, tenure or approval time that is not on the current approved rate card. Keep mandatory disclaimers next to the claims they qualify."
+      },
+      "productGuidelines": {
+        "toneOfVoice": "Clear, reassuring, transparent and respectful; never pushy.",
+        "productName": "Gold Loan",
+        "brandName": "Bajaj Finance",
+        "category": "Lending — Secured loans against gold",
+        "targetAudience": "Individuals who own gold jewellery and need short-term funds quickly.",
+        "uniqueSellingPoints": [
+          "Quick disbursal at branches",
+          "Flexible repayment options",
+          "Secure storage of pledged gold"
+        ],
+        "coreValueProps": [
+          "Clear valuation process",
+          "Transparent charges",
+          "Safe custody of jewellery"
+        ],
+        "forbiddenPhrases": [
+          "guaranteed approval",
+          "approval guaranteed",
+          "100% approval",
+          "no credit check",
+          "lowest interest rate in india",
+          "zero risk",
+          "risk-free",
+          "free money"
+        ],
+        "complianceNotes": "Name the lender as \"Bajaj Finance Limited\" (an RBI-registered NBFC) where the lending entity is referenced; keep product names that contain \"Bajaj Finserv\" unchanged. Interest rates, fees and charges must be quoted only from the current approved rate card and described as \"subject to change\". Where rates are discussed, refer readers to the Key Fact Statement (KFS) and Annual Percentage Rate (APR). Loan approval is at the lender's discretion and subject to eligibility and documentation. Link to the grievance redressal page; mention the RBI Integrated Ombudsman Scheme where escalation is discussed. Loan-to-value limits must match current RBI norms and the approved rate card; explain auction policy for non-repayment plainly.",
+        "eeatCredentials": "Lender: Bajaj Finance Limited, a non-banking financial company registered with the Reserve Bank of India."
+      },
+      "seoGuidelines": {
+        "voiceSearchOptimized": true,
+        "aeoDirectAnswerTarget": true,
+        "geoLlmCitationFocus": true,
+        "eeatStandard": "ymyl_strict",
+        "titleCharRange": {
+          "min": 52,
+          "max": 58
+        },
+        "metaDescCharRange": {
+          "min": 145,
+          "max": 158
+        },
+        "headingHierarchyRules": "H1 with primary entity name, H2 with question + topical modifier, H3 with evidence and data attribution.",
+        "schemaRequirements": [
+          "WebPage",
+          "BreadcrumbList",
+          "Organization",
+          "Article",
+          "Person",
+          "FAQPage"
+        ],
+        "sitemapGuidelines": "Daily changefreq, lastmod ISO-8601 timestamps, image tags included.",
+        "customRules": "Structured credentials, publication date, reviewer bio, and statutory licenses must be declared in JSON-LD and page markup."
+      },
+      "geoGuidelines": {
+        "enableGeoOptimization": true,
+        "blufDirectAnswerTarget": true,
+        "authoritativeStatistics": true,
+        "aiOverviewSnippetFormat": "definitive_paragraph",
+        "targetEngines": [
+          "google_aio",
+          "perplexity",
+          "chatgpt_search",
+          "gemini_research"
+        ],
+        "llmCitationStrategy": "Anchor authoritative source name, publication date, and methodology immediately following any numerical or regulatory claim.",
+        "entityDensityAndSchema": "Connect Primary Entity to parent Knowledge Graph entity using sameAs Wikidata and Crunchbase links.",
+        "brandQuotationStandard": "Incorporate verified corporate statements or executive quotes with credential attribution.",
+        "sourceVerificationStyle": "Direct inline citations linked to primary governmental, academic, or industry benchmark sources.",
+        "forbiddenAiPatterns": [
+          "as an ai language model",
+          "it is important to remember",
+          "in conclusion",
+          "furthermore without context"
+        ],
+        "customGeoRules": "Inject high-density factual answers in the first 45 words of every major section.",
+        "statDensityRequirement": "At least 1 verified metric or statistic per 150 words of body content.",
+        "directAnswerStandard": "40-50 word Bottom Line Up Front (BLUF) direct answers answering user search intent.",
+        "sourceAttributionStandard": "Formal regulatory, academic, or certified third-party audit reports.",
+        "multiPerspectiveRequirement": "Present structured comparison matrices or tables for LLM citation extraction."
+      },
+      "customerCentricityGuidelines": {
+        "targetCustomerPersona": "Credit-conscious consumers and families navigating critical financial or life decisions.",
+        "empathyAndTone": "Reassuring, compassionate, transparent, and non-judgmental. Eliminate sales pressure.",
+        "readingAccessibility": "8th-Grade layman readability (Flesch-Kincaid 60-70). Explain every financial/technical acronym immediately.",
+        "maxSentenceWords": 20,
+        "maxParagraphSentences": 3,
+        "corePainPointsToAddress": [
+          "Fear of hidden origination or processing fees",
+          "Anxiety about credit score hit during rate checks",
+          "Unclear repayment schedules or compounding interest",
+          "Unresponsive customer support during urgent disputes"
+        ],
+        "frictionPatternsToFlag": [
+          "Buried fee disclosures or asterisks without direct explanation",
+          "Aggressive countdown/false scarcity timers",
+          "Vague APR claims like \"Rates as low as...*\" without typical ranges",
+          "Complex run-on multi-clause sentences (>20 words)",
+          "Missing human contact phone or dispute assistance details"
+        ],
+        "decisionJourneyOrder": "1. Soft-Check Reassurance -> 2. Transparent Cost Calculator -> 3. Simple 3-Step Process -> 4. Clear FAQ & Human Support Access",
+        "objectionHandlingRules": [
+          "Proactively explain eligibility if credit score is below average",
+          "Directly state there are zero penalties for early prepayment or payoff",
+          "Clarify state licensing, security standards, and FDIC/partner bank backing"
+        ],
+        "trustAndReassuranceSignals": [
+          "\"No impact on credit score\" soft check badge",
+          "256-bit SSL bank-grade security encryption",
+          "Dedicated toll-free human phone support with hours",
+          "BBB / Trustpilot verified rating badge",
+          "Full statutory licensing & APR disclosure block"
+        ],
+        "scoringWeights": {
+          "laymanAccessibilityWeight": 30,
+          "objectionHandlingWeight": 25,
+          "frictionEliminationWeight": 25,
+          "journeyStructureWeight": 20
+        },
+        "customCustomerRules": "Every rate quote must display an illustrative APR example with representative loan terms and total repayment calculation."
+      },
+      "structureMappingGuidelines": {
+        "headingHierarchyRule": "Strict single H1 topic anchor -> H2 major search-volume chapters -> H3 conversational voice queries. Never skip heading levels (no H2 directly into H4).",
+        "requirePrimaryKeywordInH1": true,
+        "minKeywordFrequency": 2,
+        "maxKeywordDensityPercent": 2.8,
+        "targetKeywordsInHeadingsMinPercent": 80,
+        "headingWordCountLimit": {
+          "min": 4,
+          "max": 10
+        },
+        "voiceQuestionHeadingsTarget": 40,
+        "preferredSectionOrder": [
+          "Hero Definition & Core Search Intent (H1)",
+          "Key Benefits & Quantified Performance (H2)",
+          "How It Works / 3-Step Process (H2)",
+          "Feature Breakdown & Comparative Matrix (H2)",
+          "Frequent Voice Questions & Direct BLUF Answers (H2)",
+          "Customer Reviews & Verified Proof (H2)",
+          "Final Call to Action (H2)"
+        ],
+        "searchIntentMappingStrategy": "Primary high-volume commercial keywords mapped to H1 and first H2; secondary informational and voice question long-tail keywords mapped to H3 FAQ sections.",
+        "keywordDistributionRules": "Primary target keyword in H1, first paragraph, and at least one H2. Target secondary keywords distributed evenly across body sub-sections with no clustering.",
+        "customStructureRules": "Every question-based H2/H3 heading must be immediately followed by a concise 40-50 word direct answer paragraph suitable for voice assistants."
+      },
+      "keywords": [],
+      "readerContext": "Customer who needs short-term funds against gold and worries about safety of jewellery.",
+      "createdAt": "2026-10-20T00:00:00.000Z",
+      "updatedAt": "2026-10-20T00:00:00.000Z"
+    },
+    {
+      "id": "bfl-profile-fixed-deposit",
+      "name": "Bajaj Finserv — Fixed Deposit",
+      "description": "Corporate fixed deposits accepted by Bajaj Finance Limited.",
+      "category": "bajaj_finserv",
+      "isBuiltIn": false,
+      "contentGuidelines": {
+        "toneOfVoice": "Clear, warm and trustworthy. Explain like a helpful relationship manager, not a salesperson.",
+        "readabilityLevel": "Class 8 reading level in Indian English; explain every financial term the first time it appears.",
+        "paragraphConstraints": "Maximum 3 sentences (about 60 words) per paragraph. One idea per paragraph.",
+        "formattingRules": [
+          "Write amounts with the ₹ symbol and Indian numbering (lakh, crore), e.g. ₹5 lakh.",
+          "Write rates as \"% p.a.\" and say whether they are fixed or floating.",
+          "Put fees and charges in a table with a \"subject to change\" note.",
+          "Open every H2 with a one or two sentence direct answer.",
+          "Use numbered steps for application and documentation processes."
+        ],
+        "forbiddenCliches": [
+          "game changer",
+          "one-stop solution",
+          "hassle-free",
+          "in today's fast-paced world",
+          "unlock your dreams",
+          "best in class",
+          "delve into"
+        ],
+        "grammarAndPerspective": "Second person (\"you\", \"your\"), active voice, present tense.",
+        "ctaStandards": "Specific, honest CTAs: \"Check your eligibility\", \"Apply online\", \"Calculate your EMI\", \"Read the Key Fact Statement\".",
+        "citationFormatting": "Name the source in the sentence (e.g. \"as per RBI guidelines\") and link to the official page.",
+        "customContentRules": "Never state a rate, fee, limit, tenure or approval time that is not on the current approved rate card. Keep mandatory disclaimers next to the claims they qualify."
+      },
+      "productGuidelines": {
+        "toneOfVoice": "Clear, reassuring, transparent and respectful; never pushy.",
+        "productName": "Fixed Deposit",
+        "brandName": "Bajaj Finance",
+        "category": "Deposits — Corporate fixed deposits",
+        "targetAudience": "Savers and senior citizens looking for predictable returns on their savings.",
+        "uniqueSellingPoints": [
+          "Choice of tenures",
+          "Cumulative and non-cumulative payout options",
+          "Online booking"
+        ],
+        "coreValueProps": [
+          "Predictable returns",
+          "Clear premature-withdrawal rules",
+          "Transparent payout options"
+        ],
+        "forbiddenPhrases": [
+          "risk-free",
+          "zero risk",
+          "insured by dicgc",
+          "government guaranteed",
+          "guaranteed by rbi"
+        ],
+        "complianceNotes": "Deposits are accepted by Bajaj Finance Limited. State clearly that deposits with NBFCs are not insured by DICGC. Quote interest rates and credit ratings only from the current approved rate card and rating letters, with the effective date. Explain premature withdrawal rules and TDS as per prevailing tax laws.",
+        "eeatCredentials": "Issuer: Bajaj Finance Limited, a deposit-taking NBFC registered with the Reserve Bank of India."
+      },
+      "seoGuidelines": {
+        "voiceSearchOptimized": true,
+        "aeoDirectAnswerTarget": true,
+        "geoLlmCitationFocus": true,
+        "eeatStandard": "ymyl_strict",
+        "titleCharRange": {
+          "min": 52,
+          "max": 58
+        },
+        "metaDescCharRange": {
+          "min": 145,
+          "max": 158
+        },
+        "headingHierarchyRules": "H1 with primary entity name, H2 with question + topical modifier, H3 with evidence and data attribution.",
+        "schemaRequirements": [
+          "WebPage",
+          "BreadcrumbList",
+          "Organization",
+          "Article",
+          "Person",
+          "FAQPage"
+        ],
+        "sitemapGuidelines": "Daily changefreq, lastmod ISO-8601 timestamps, image tags included.",
+        "customRules": "Structured credentials, publication date, reviewer bio, and statutory licenses must be declared in JSON-LD and page markup."
+      },
+      "geoGuidelines": {
+        "enableGeoOptimization": true,
+        "blufDirectAnswerTarget": true,
+        "authoritativeStatistics": true,
+        "aiOverviewSnippetFormat": "definitive_paragraph",
+        "targetEngines": [
+          "google_aio",
+          "perplexity",
+          "chatgpt_search",
+          "gemini_research"
+        ],
+        "llmCitationStrategy": "Anchor authoritative source name, publication date, and methodology immediately following any numerical or regulatory claim.",
+        "entityDensityAndSchema": "Connect Primary Entity to parent Knowledge Graph entity using sameAs Wikidata and Crunchbase links.",
+        "brandQuotationStandard": "Incorporate verified corporate statements or executive quotes with credential attribution.",
+        "sourceVerificationStyle": "Direct inline citations linked to primary governmental, academic, or industry benchmark sources.",
+        "forbiddenAiPatterns": [
+          "as an ai language model",
+          "it is important to remember",
+          "in conclusion",
+          "furthermore without context"
+        ],
+        "customGeoRules": "Inject high-density factual answers in the first 45 words of every major section.",
+        "statDensityRequirement": "At least 1 verified metric or statistic per 150 words of body content.",
+        "directAnswerStandard": "40-50 word Bottom Line Up Front (BLUF) direct answers answering user search intent.",
+        "sourceAttributionStandard": "Formal regulatory, academic, or certified third-party audit reports.",
+        "multiPerspectiveRequirement": "Present structured comparison matrices or tables for LLM citation extraction."
+      },
+      "customerCentricityGuidelines": {
+        "targetCustomerPersona": "Credit-conscious consumers and families navigating critical financial or life decisions.",
+        "empathyAndTone": "Reassuring, compassionate, transparent, and non-judgmental. Eliminate sales pressure.",
+        "readingAccessibility": "8th-Grade layman readability (Flesch-Kincaid 60-70). Explain every financial/technical acronym immediately.",
+        "maxSentenceWords": 20,
+        "maxParagraphSentences": 3,
+        "corePainPointsToAddress": [
+          "Fear of hidden origination or processing fees",
+          "Anxiety about credit score hit during rate checks",
+          "Unclear repayment schedules or compounding interest",
+          "Unresponsive customer support during urgent disputes"
+        ],
+        "frictionPatternsToFlag": [
+          "Buried fee disclosures or asterisks without direct explanation",
+          "Aggressive countdown/false scarcity timers",
+          "Vague APR claims like \"Rates as low as...*\" without typical ranges",
+          "Complex run-on multi-clause sentences (>20 words)",
+          "Missing human contact phone or dispute assistance details"
+        ],
+        "decisionJourneyOrder": "1. Soft-Check Reassurance -> 2. Transparent Cost Calculator -> 3. Simple 3-Step Process -> 4. Clear FAQ & Human Support Access",
+        "objectionHandlingRules": [
+          "Proactively explain eligibility if credit score is below average",
+          "Directly state there are zero penalties for early prepayment or payoff",
+          "Clarify state licensing, security standards, and FDIC/partner bank backing"
+        ],
+        "trustAndReassuranceSignals": [
+          "\"No impact on credit score\" soft check badge",
+          "256-bit SSL bank-grade security encryption",
+          "Dedicated toll-free human phone support with hours",
+          "BBB / Trustpilot verified rating badge",
+          "Full statutory licensing & APR disclosure block"
+        ],
+        "scoringWeights": {
+          "laymanAccessibilityWeight": 30,
+          "objectionHandlingWeight": 25,
+          "frictionEliminationWeight": 25,
+          "journeyStructureWeight": 20
+        },
+        "customCustomerRules": "Every rate quote must display an illustrative APR example with representative loan terms and total repayment calculation."
+      },
+      "structureMappingGuidelines": {
+        "headingHierarchyRule": "Strict single H1 topic anchor -> H2 major search-volume chapters -> H3 conversational voice queries. Never skip heading levels (no H2 directly into H4).",
+        "requirePrimaryKeywordInH1": true,
+        "minKeywordFrequency": 2,
+        "maxKeywordDensityPercent": 2.8,
+        "targetKeywordsInHeadingsMinPercent": 80,
+        "headingWordCountLimit": {
+          "min": 4,
+          "max": 10
+        },
+        "voiceQuestionHeadingsTarget": 40,
+        "preferredSectionOrder": [
+          "Hero Definition & Core Search Intent (H1)",
+          "Key Benefits & Quantified Performance (H2)",
+          "How It Works / 3-Step Process (H2)",
+          "Feature Breakdown & Comparative Matrix (H2)",
+          "Frequent Voice Questions & Direct BLUF Answers (H2)",
+          "Customer Reviews & Verified Proof (H2)",
+          "Final Call to Action (H2)"
+        ],
+        "searchIntentMappingStrategy": "Primary high-volume commercial keywords mapped to H1 and first H2; secondary informational and voice question long-tail keywords mapped to H3 FAQ sections.",
+        "keywordDistributionRules": "Primary target keyword in H1, first paragraph, and at least one H2. Target secondary keywords distributed evenly across body sub-sections with no clustering.",
+        "customStructureRules": "Every question-based H2/H3 heading must be immediately followed by a concise 40-50 word direct answer paragraph suitable for voice assistants."
+      },
+      "keywords": [],
+      "readerContext": "Saver or senior citizen comparing FD returns, safety and withdrawal rules.",
+      "createdAt": "2026-10-20T00:00:00.000Z",
+      "updatedAt": "2026-10-20T00:00:00.000Z"
+    },
+    {
+      "id": "bfl-profile-insta-emi-card",
+      "name": "Bajaj Finserv — Insta EMI Card & EMI Network",
+      "description": "EMI card and no-cost EMI shopping on the Bajaj Finserv EMI Network.",
+      "category": "bajaj_finserv",
+      "isBuiltIn": false,
+      "contentGuidelines": {
+        "toneOfVoice": "Clear, warm and trustworthy. Explain like a helpful relationship manager, not a salesperson.",
+        "readabilityLevel": "Class 8 reading level in Indian English; explain every financial term the first time it appears.",
+        "paragraphConstraints": "Maximum 3 sentences (about 60 words) per paragraph. One idea per paragraph.",
+        "formattingRules": [
+          "Write amounts with the ₹ symbol and Indian numbering (lakh, crore), e.g. ₹5 lakh.",
+          "Write rates as \"% p.a.\" and say whether they are fixed or floating.",
+          "Put fees and charges in a table with a \"subject to change\" note.",
+          "Open every H2 with a one or two sentence direct answer.",
+          "Use numbered steps for application and documentation processes."
+        ],
+        "forbiddenCliches": [
+          "game changer",
+          "one-stop solution",
+          "hassle-free",
+          "in today's fast-paced world",
+          "unlock your dreams",
+          "best in class",
+          "delve into"
+        ],
+        "grammarAndPerspective": "Second person (\"you\", \"your\"), active voice, present tense.",
+        "ctaStandards": "Specific, honest CTAs: \"Check your eligibility\", \"Apply online\", \"Calculate your EMI\", \"Read the Key Fact Statement\".",
+        "citationFormatting": "Name the source in the sentence (e.g. \"as per RBI guidelines\") and link to the official page.",
+        "customContentRules": "Never state a rate, fee, limit, tenure or approval time that is not on the current approved rate card. Keep mandatory disclaimers next to the claims they qualify."
+      },
+      "productGuidelines": {
+        "toneOfVoice": "Clear, reassuring, transparent and respectful; never pushy.",
+        "productName": "Insta EMI Card",
+        "brandName": "Bajaj Finance",
+        "category": "Consumer finance — EMI card and EMI Network",
+        "targetAudience": "Shoppers who want to buy electronics, appliances and other products on EMI at partner stores and online.",
+        "uniqueSellingPoints": [
+          "Shop on EMI at partner stores and online",
+          "Pre-approved limit for eligible customers",
+          "Digital card"
+        ],
+        "coreValueProps": [
+          "Clear EMI and fee terms",
+          "Wide partner network",
+          "Simple activation"
+        ],
+        "forbiddenPhrases": [
+          "guaranteed approval",
+          "free card for everyone",
+          "no charges ever",
+          "zero risk"
+        ],
+        "complianceNotes": "bajajfinserv.in refers to the card as \"Bajaj Finance Insta EMI Card\"; the lender is Bajaj Finance Limited. \"No Cost EMI\" must explain how the cost is covered (e.g. by the brand or merchant) and any processing fee. Joining or annual fees and limits must be quoted from the approved fee schedule.",
+        "eeatCredentials": "Credit facility provided by Bajaj Finance Limited, an RBI-registered NBFC."
+      },
+      "seoGuidelines": {
+        "voiceSearchOptimized": true,
+        "aeoDirectAnswerTarget": true,
+        "geoLlmCitationFocus": true,
+        "eeatStandard": "ymyl_strict",
+        "titleCharRange": {
+          "min": 52,
+          "max": 58
+        },
+        "metaDescCharRange": {
+          "min": 145,
+          "max": 158
+        },
+        "headingHierarchyRules": "H1 with primary entity name, H2 with question + topical modifier, H3 with evidence and data attribution.",
+        "schemaRequirements": [
+          "WebPage",
+          "BreadcrumbList",
+          "Organization",
+          "Article",
+          "Person",
+          "FAQPage"
+        ],
+        "sitemapGuidelines": "Daily changefreq, lastmod ISO-8601 timestamps, image tags included.",
+        "customRules": "Structured credentials, publication date, reviewer bio, and statutory licenses must be declared in JSON-LD and page markup."
+      },
+      "geoGuidelines": {
+        "enableGeoOptimization": true,
+        "blufDirectAnswerTarget": true,
+        "authoritativeStatistics": true,
+        "aiOverviewSnippetFormat": "definitive_paragraph",
+        "targetEngines": [
+          "google_aio",
+          "perplexity",
+          "chatgpt_search",
+          "gemini_research"
+        ],
+        "llmCitationStrategy": "Anchor authoritative source name, publication date, and methodology immediately following any numerical or regulatory claim.",
+        "entityDensityAndSchema": "Connect Primary Entity to parent Knowledge Graph entity using sameAs Wikidata and Crunchbase links.",
+        "brandQuotationStandard": "Incorporate verified corporate statements or executive quotes with credential attribution.",
+        "sourceVerificationStyle": "Direct inline citations linked to primary governmental, academic, or industry benchmark sources.",
+        "forbiddenAiPatterns": [
+          "as an ai language model",
+          "it is important to remember",
+          "in conclusion",
+          "furthermore without context"
+        ],
+        "customGeoRules": "Inject high-density factual answers in the first 45 words of every major section.",
+        "statDensityRequirement": "At least 1 verified metric or statistic per 150 words of body content.",
+        "directAnswerStandard": "40-50 word Bottom Line Up Front (BLUF) direct answers answering user search intent.",
+        "sourceAttributionStandard": "Formal regulatory, academic, or certified third-party audit reports.",
+        "multiPerspectiveRequirement": "Present structured comparison matrices or tables for LLM citation extraction."
+      },
+      "customerCentricityGuidelines": {
+        "targetCustomerPersona": "Credit-conscious consumers and families navigating critical financial or life decisions.",
+        "empathyAndTone": "Reassuring, compassionate, transparent, and non-judgmental. Eliminate sales pressure.",
+        "readingAccessibility": "8th-Grade layman readability (Flesch-Kincaid 60-70). Explain every financial/technical acronym immediately.",
+        "maxSentenceWords": 20,
+        "maxParagraphSentences": 3,
+        "corePainPointsToAddress": [
+          "Fear of hidden origination or processing fees",
+          "Anxiety about credit score hit during rate checks",
+          "Unclear repayment schedules or compounding interest",
+          "Unresponsive customer support during urgent disputes"
+        ],
+        "frictionPatternsToFlag": [
+          "Buried fee disclosures or asterisks without direct explanation",
+          "Aggressive countdown/false scarcity timers",
+          "Vague APR claims like \"Rates as low as...*\" without typical ranges",
+          "Complex run-on multi-clause sentences (>20 words)",
+          "Missing human contact phone or dispute assistance details"
+        ],
+        "decisionJourneyOrder": "1. Soft-Check Reassurance -> 2. Transparent Cost Calculator -> 3. Simple 3-Step Process -> 4. Clear FAQ & Human Support Access",
+        "objectionHandlingRules": [
+          "Proactively explain eligibility if credit score is below average",
+          "Directly state there are zero penalties for early prepayment or payoff",
+          "Clarify state licensing, security standards, and FDIC/partner bank backing"
+        ],
+        "trustAndReassuranceSignals": [
+          "\"No impact on credit score\" soft check badge",
+          "256-bit SSL bank-grade security encryption",
+          "Dedicated toll-free human phone support with hours",
+          "BBB / Trustpilot verified rating badge",
+          "Full statutory licensing & APR disclosure block"
+        ],
+        "scoringWeights": {
+          "laymanAccessibilityWeight": 30,
+          "objectionHandlingWeight": 25,
+          "frictionEliminationWeight": 25,
+          "journeyStructureWeight": 20
+        },
+        "customCustomerRules": "Every rate quote must display an illustrative APR example with representative loan terms and total repayment calculation."
+      },
+      "structureMappingGuidelines": {
+        "headingHierarchyRule": "Strict single H1 topic anchor -> H2 major search-volume chapters -> H3 conversational voice queries. Never skip heading levels (no H2 directly into H4).",
+        "requirePrimaryKeywordInH1": true,
+        "minKeywordFrequency": 2,
+        "maxKeywordDensityPercent": 2.8,
+        "targetKeywordsInHeadingsMinPercent": 80,
+        "headingWordCountLimit": {
+          "min": 4,
+          "max": 10
+        },
+        "voiceQuestionHeadingsTarget": 40,
+        "preferredSectionOrder": [
+          "Hero Definition & Core Search Intent (H1)",
+          "Key Benefits & Quantified Performance (H2)",
+          "How It Works / 3-Step Process (H2)",
+          "Feature Breakdown & Comparative Matrix (H2)",
+          "Frequent Voice Questions & Direct BLUF Answers (H2)",
+          "Customer Reviews & Verified Proof (H2)",
+          "Final Call to Action (H2)"
+        ],
+        "searchIntentMappingStrategy": "Primary high-volume commercial keywords mapped to H1 and first H2; secondary informational and voice question long-tail keywords mapped to H3 FAQ sections.",
+        "keywordDistributionRules": "Primary target keyword in H1, first paragraph, and at least one H2. Target secondary keywords distributed evenly across body sub-sections with no clustering.",
+        "customStructureRules": "Every question-based H2/H3 heading must be immediately followed by a concise 40-50 word direct answer paragraph suitable for voice assistants."
+      },
+      "keywords": [],
+      "readerContext": "Shopper who wants to buy on EMI and needs to understand fees and partner stores.",
+      "createdAt": "2026-10-20T00:00:00.000Z",
+      "updatedAt": "2026-10-20T00:00:00.000Z"
+    },
+    {
+      "id": "bfl-profile-credit-card",
+      "name": "Bajaj Finserv — Co-branded Credit Cards",
+      "description": "Credit cards co-branded with partner banks.",
+      "category": "bajaj_finserv",
+      "isBuiltIn": false,
+      "contentGuidelines": {
+        "toneOfVoice": "Clear, warm and trustworthy. Explain like a helpful relationship manager, not a salesperson.",
+        "readabilityLevel": "Class 8 reading level in Indian English; explain every financial term the first time it appears.",
+        "paragraphConstraints": "Maximum 3 sentences (about 60 words) per paragraph. One idea per paragraph.",
+        "formattingRules": [
+          "Write amounts with the ₹ symbol and Indian numbering (lakh, crore), e.g. ₹5 lakh.",
+          "Write rates as \"% p.a.\" and say whether they are fixed or floating.",
+          "Put fees and charges in a table with a \"subject to change\" note.",
+          "Open every H2 with a one or two sentence direct answer.",
+          "Use numbered steps for application and documentation processes."
+        ],
+        "forbiddenCliches": [
+          "game changer",
+          "one-stop solution",
+          "hassle-free",
+          "in today's fast-paced world",
+          "unlock your dreams",
+          "best in class",
+          "delve into"
+        ],
+        "grammarAndPerspective": "Second person (\"you\", \"your\"), active voice, present tense.",
+        "ctaStandards": "Specific, honest CTAs: \"Check your eligibility\", \"Apply online\", \"Calculate your EMI\", \"Read the Key Fact Statement\".",
+        "citationFormatting": "Name the source in the sentence (e.g. \"as per RBI guidelines\") and link to the official page.",
+        "customContentRules": "Never state a rate, fee, limit, tenure or approval time that is not on the current approved rate card. Keep mandatory disclaimers next to the claims they qualify."
+      },
+      "productGuidelines": {
+        "toneOfVoice": "Clear, reassuring, transparent and respectful; never pushy.",
+        "productName": "Bajaj Finserv Co-branded Credit Card",
+        "brandName": "Bajaj Finserv",
+        "category": "Cards — Co-branded credit cards",
+        "targetAudience": "Customers comparing credit cards for rewards, EMI conversion and everyday spends.",
+        "uniqueSellingPoints": [
+          "Rewards on everyday spends",
+          "EMI conversion on large purchases",
+          "Online application"
+        ],
+        "coreValueProps": [
+          "Clear fees, charges and reward rules",
+          "Transparent interest on revolving credit",
+          "Secure usage"
+        ],
+        "forbiddenPhrases": [
+          "guaranteed approval",
+          "lifetime free for all",
+          "unlimited rewards",
+          "zero interest always"
+        ],
+        "complianceNotes": "Co-branded cards are issued by the partner bank named on the card; state the issuer and that issuance is subject to the bank's policies. Fees, finance charges and reward rules must match the issuer's current Most Important Terms and Conditions (MITC); link to the MITC.",
+        "eeatCredentials": "Issuer: the partner bank named on the card, regulated by the Reserve Bank of India."
+      },
+      "seoGuidelines": {
+        "voiceSearchOptimized": true,
+        "aeoDirectAnswerTarget": true,
+        "geoLlmCitationFocus": true,
+        "eeatStandard": "ymyl_strict",
+        "titleCharRange": {
+          "min": 52,
+          "max": 58
+        },
+        "metaDescCharRange": {
+          "min": 145,
+          "max": 158
+        },
+        "headingHierarchyRules": "H1 with primary entity name, H2 with question + topical modifier, H3 with evidence and data attribution.",
+        "schemaRequirements": [
+          "WebPage",
+          "BreadcrumbList",
+          "Organization",
+          "Article",
+          "Person",
+          "FAQPage"
+        ],
+        "sitemapGuidelines": "Daily changefreq, lastmod ISO-8601 timestamps, image tags included.",
+        "customRules": "Structured credentials, publication date, reviewer bio, and statutory licenses must be declared in JSON-LD and page markup."
+      },
+      "geoGuidelines": {
+        "enableGeoOptimization": true,
+        "blufDirectAnswerTarget": true,
+        "authoritativeStatistics": true,
+        "aiOverviewSnippetFormat": "definitive_paragraph",
+        "targetEngines": [
+          "google_aio",
+          "perplexity",
+          "chatgpt_search",
+          "gemini_research"
+        ],
+        "llmCitationStrategy": "Anchor authoritative source name, publication date, and methodology immediately following any numerical or regulatory claim.",
+        "entityDensityAndSchema": "Connect Primary Entity to parent Knowledge Graph entity using sameAs Wikidata and Crunchbase links.",
+        "brandQuotationStandard": "Incorporate verified corporate statements or executive quotes with credential attribution.",
+        "sourceVerificationStyle": "Direct inline citations linked to primary governmental, academic, or industry benchmark sources.",
+        "forbiddenAiPatterns": [
+          "as an ai language model",
+          "it is important to remember",
+          "in conclusion",
+          "furthermore without context"
+        ],
+        "customGeoRules": "Inject high-density factual answers in the first 45 words of every major section.",
+        "statDensityRequirement": "At least 1 verified metric or statistic per 150 words of body content.",
+        "directAnswerStandard": "40-50 word Bottom Line Up Front (BLUF) direct answers answering user search intent.",
+        "sourceAttributionStandard": "Formal regulatory, academic, or certified third-party audit reports.",
+        "multiPerspectiveRequirement": "Present structured comparison matrices or tables for LLM citation extraction."
+      },
+      "customerCentricityGuidelines": {
+        "targetCustomerPersona": "Credit-conscious consumers and families navigating critical financial or life decisions.",
+        "empathyAndTone": "Reassuring, compassionate, transparent, and non-judgmental. Eliminate sales pressure.",
+        "readingAccessibility": "8th-Grade layman readability (Flesch-Kincaid 60-70). Explain every financial/technical acronym immediately.",
+        "maxSentenceWords": 20,
+        "maxParagraphSentences": 3,
+        "corePainPointsToAddress": [
+          "Fear of hidden origination or processing fees",
+          "Anxiety about credit score hit during rate checks",
+          "Unclear repayment schedules or compounding interest",
+          "Unresponsive customer support during urgent disputes"
+        ],
+        "frictionPatternsToFlag": [
+          "Buried fee disclosures or asterisks without direct explanation",
+          "Aggressive countdown/false scarcity timers",
+          "Vague APR claims like \"Rates as low as...*\" without typical ranges",
+          "Complex run-on multi-clause sentences (>20 words)",
+          "Missing human contact phone or dispute assistance details"
+        ],
+        "decisionJourneyOrder": "1. Soft-Check Reassurance -> 2. Transparent Cost Calculator -> 3. Simple 3-Step Process -> 4. Clear FAQ & Human Support Access",
+        "objectionHandlingRules": [
+          "Proactively explain eligibility if credit score is below average",
+          "Directly state there are zero penalties for early prepayment or payoff",
+          "Clarify state licensing, security standards, and FDIC/partner bank backing"
+        ],
+        "trustAndReassuranceSignals": [
+          "\"No impact on credit score\" soft check badge",
+          "256-bit SSL bank-grade security encryption",
+          "Dedicated toll-free human phone support with hours",
+          "BBB / Trustpilot verified rating badge",
+          "Full statutory licensing & APR disclosure block"
+        ],
+        "scoringWeights": {
+          "laymanAccessibilityWeight": 30,
+          "objectionHandlingWeight": 25,
+          "frictionEliminationWeight": 25,
+          "journeyStructureWeight": 20
+        },
+        "customCustomerRules": "Every rate quote must display an illustrative APR example with representative loan terms and total repayment calculation."
+      },
+      "structureMappingGuidelines": {
+        "headingHierarchyRule": "Strict single H1 topic anchor -> H2 major search-volume chapters -> H3 conversational voice queries. Never skip heading levels (no H2 directly into H4).",
+        "requirePrimaryKeywordInH1": true,
+        "minKeywordFrequency": 2,
+        "maxKeywordDensityPercent": 2.8,
+        "targetKeywordsInHeadingsMinPercent": 80,
+        "headingWordCountLimit": {
+          "min": 4,
+          "max": 10
+        },
+        "voiceQuestionHeadingsTarget": 40,
+        "preferredSectionOrder": [
+          "Hero Definition & Core Search Intent (H1)",
+          "Key Benefits & Quantified Performance (H2)",
+          "How It Works / 3-Step Process (H2)",
+          "Feature Breakdown & Comparative Matrix (H2)",
+          "Frequent Voice Questions & Direct BLUF Answers (H2)",
+          "Customer Reviews & Verified Proof (H2)",
+          "Final Call to Action (H2)"
+        ],
+        "searchIntentMappingStrategy": "Primary high-volume commercial keywords mapped to H1 and first H2; secondary informational and voice question long-tail keywords mapped to H3 FAQ sections.",
+        "keywordDistributionRules": "Primary target keyword in H1, first paragraph, and at least one H2. Target secondary keywords distributed evenly across body sub-sections with no clustering.",
+        "customStructureRules": "Every question-based H2/H3 heading must be immediately followed by a concise 40-50 word direct answer paragraph suitable for voice assistants."
+      },
+      "keywords": [],
+      "readerContext": "Customer comparing credit card rewards, fees and eligibility.",
+      "createdAt": "2026-10-20T00:00:00.000Z",
+      "updatedAt": "2026-10-20T00:00:00.000Z"
+    },
+    {
+      "id": "bfl-profile-insurance",
+      "name": "Bajaj Finserv — Insurance",
+      "description": "Insurance products distributed as a corporate agent.",
+      "category": "bajaj_finserv",
+      "isBuiltIn": false,
+      "contentGuidelines": {
+        "toneOfVoice": "Clear, warm and trustworthy. Explain like a helpful relationship manager, not a salesperson.",
+        "readabilityLevel": "Class 8 reading level in Indian English; explain every financial term the first time it appears.",
+        "paragraphConstraints": "Maximum 3 sentences (about 60 words) per paragraph. One idea per paragraph.",
+        "formattingRules": [
+          "Write amounts with the ₹ symbol and Indian numbering (lakh, crore), e.g. ₹5 lakh.",
+          "Write rates as \"% p.a.\" and say whether they are fixed or floating.",
+          "Put fees and charges in a table with a \"subject to change\" note.",
+          "Open every H2 with a one or two sentence direct answer.",
+          "Use numbered steps for application and documentation processes."
+        ],
+        "forbiddenCliches": [
+          "game changer",
+          "one-stop solution",
+          "hassle-free",
+          "in today's fast-paced world",
+          "unlock your dreams",
+          "best in class",
+          "delve into"
+        ],
+        "grammarAndPerspective": "Second person (\"you\", \"your\"), active voice, present tense.",
+        "ctaStandards": "Specific, honest CTAs: \"Check your eligibility\", \"Apply online\", \"Calculate your EMI\", \"Read the Key Fact Statement\".",
+        "citationFormatting": "Name the source in the sentence (e.g. \"as per RBI guidelines\") and link to the official page.",
+        "customContentRules": "Never state a rate, fee, limit, tenure or approval time that is not on the current approved rate card. Keep mandatory disclaimers next to the claims they qualify."
+      },
+      "productGuidelines": {
+        "toneOfVoice": "Clear, reassuring, transparent and respectful; never pushy.",
+        "productName": "Insurance",
+        "brandName": "Bajaj Finserv",
+        "category": "Insurance distribution — health, life, motor and pocket insurance",
+        "targetAudience": "Individuals and families comparing insurance cover for health, life, vehicles and everyday risks.",
+        "uniqueSellingPoints": [
+          "Compare plans from partner insurers",
+          "Buy online",
+          "Help with renewals"
+        ],
+        "coreValueProps": [
+          "Clear inclusions and exclusions",
+          "Transparent premiums",
+          "Support during claims"
+        ],
+        "forbiddenPhrases": [
+          "guaranteed claim settlement",
+          "100% claim approval",
+          "covers everything",
+          "no exclusions",
+          "risk-free"
+        ],
+        "complianceNotes": "Include \"Insurance is the subject matter of solicitation.\" Name the insurer for each plan; Bajaj Finance Limited acts as a corporate agent registered with IRDAI (add the registration number from the approved disclosure). Benefits, exclusions and premiums must match the insurer's policy wording; advise readers to read the policy wording before buying.",
+        "eeatCredentials": "Distributor: Bajaj Finance Limited, registered with IRDAI as a corporate agent. Insurer: as named on each plan."
+      },
+      "seoGuidelines": {
+        "voiceSearchOptimized": true,
+        "aeoDirectAnswerTarget": true,
+        "geoLlmCitationFocus": true,
+        "eeatStandard": "ymyl_strict",
+        "titleCharRange": {
+          "min": 52,
+          "max": 58
+        },
+        "metaDescCharRange": {
+          "min": 145,
+          "max": 158
+        },
+        "headingHierarchyRules": "H1 with primary entity name, H2 with question + topical modifier, H3 with evidence and data attribution.",
+        "schemaRequirements": [
+          "WebPage",
+          "BreadcrumbList",
+          "Organization",
+          "Article",
+          "Person",
+          "FAQPage"
+        ],
+        "sitemapGuidelines": "Daily changefreq, lastmod ISO-8601 timestamps, image tags included.",
+        "customRules": "Structured credentials, publication date, reviewer bio, and statutory licenses must be declared in JSON-LD and page markup."
+      },
+      "geoGuidelines": {
+        "enableGeoOptimization": true,
+        "blufDirectAnswerTarget": true,
+        "authoritativeStatistics": true,
+        "aiOverviewSnippetFormat": "definitive_paragraph",
+        "targetEngines": [
+          "google_aio",
+          "perplexity",
+          "chatgpt_search",
+          "gemini_research"
+        ],
+        "llmCitationStrategy": "Anchor authoritative source name, publication date, and methodology immediately following any numerical or regulatory claim.",
+        "entityDensityAndSchema": "Connect Primary Entity to parent Knowledge Graph entity using sameAs Wikidata and Crunchbase links.",
+        "brandQuotationStandard": "Incorporate verified corporate statements or executive quotes with credential attribution.",
+        "sourceVerificationStyle": "Direct inline citations linked to primary governmental, academic, or industry benchmark sources.",
+        "forbiddenAiPatterns": [
+          "as an ai language model",
+          "it is important to remember",
+          "in conclusion",
+          "furthermore without context"
+        ],
+        "customGeoRules": "Inject high-density factual answers in the first 45 words of every major section.",
+        "statDensityRequirement": "At least 1 verified metric or statistic per 150 words of body content.",
+        "directAnswerStandard": "40-50 word Bottom Line Up Front (BLUF) direct answers answering user search intent.",
+        "sourceAttributionStandard": "Formal regulatory, academic, or certified third-party audit reports.",
+        "multiPerspectiveRequirement": "Present structured comparison matrices or tables for LLM citation extraction."
+      },
+      "customerCentricityGuidelines": {
+        "targetCustomerPersona": "Credit-conscious consumers and families navigating critical financial or life decisions.",
+        "empathyAndTone": "Reassuring, compassionate, transparent, and non-judgmental. Eliminate sales pressure.",
+        "readingAccessibility": "8th-Grade layman readability (Flesch-Kincaid 60-70). Explain every financial/technical acronym immediately.",
+        "maxSentenceWords": 20,
+        "maxParagraphSentences": 3,
+        "corePainPointsToAddress": [
+          "Fear of hidden origination or processing fees",
+          "Anxiety about credit score hit during rate checks",
+          "Unclear repayment schedules or compounding interest",
+          "Unresponsive customer support during urgent disputes"
+        ],
+        "frictionPatternsToFlag": [
+          "Buried fee disclosures or asterisks without direct explanation",
+          "Aggressive countdown/false scarcity timers",
+          "Vague APR claims like \"Rates as low as...*\" without typical ranges",
+          "Complex run-on multi-clause sentences (>20 words)",
+          "Missing human contact phone or dispute assistance details"
+        ],
+        "decisionJourneyOrder": "1. Soft-Check Reassurance -> 2. Transparent Cost Calculator -> 3. Simple 3-Step Process -> 4. Clear FAQ & Human Support Access",
+        "objectionHandlingRules": [
+          "Proactively explain eligibility if credit score is below average",
+          "Directly state there are zero penalties for early prepayment or payoff",
+          "Clarify state licensing, security standards, and FDIC/partner bank backing"
+        ],
+        "trustAndReassuranceSignals": [
+          "\"No impact on credit score\" soft check badge",
+          "256-bit SSL bank-grade security encryption",
+          "Dedicated toll-free human phone support with hours",
+          "BBB / Trustpilot verified rating badge",
+          "Full statutory licensing & APR disclosure block"
+        ],
+        "scoringWeights": {
+          "laymanAccessibilityWeight": 30,
+          "objectionHandlingWeight": 25,
+          "frictionEliminationWeight": 25,
+          "journeyStructureWeight": 20
+        },
+        "customCustomerRules": "Every rate quote must display an illustrative APR example with representative loan terms and total repayment calculation."
+      },
+      "structureMappingGuidelines": {
+        "headingHierarchyRule": "Strict single H1 topic anchor -> H2 major search-volume chapters -> H3 conversational voice queries. Never skip heading levels (no H2 directly into H4).",
+        "requirePrimaryKeywordInH1": true,
+        "minKeywordFrequency": 2,
+        "maxKeywordDensityPercent": 2.8,
+        "targetKeywordsInHeadingsMinPercent": 80,
+        "headingWordCountLimit": {
+          "min": 4,
+          "max": 10
+        },
+        "voiceQuestionHeadingsTarget": 40,
+        "preferredSectionOrder": [
+          "Hero Definition & Core Search Intent (H1)",
+          "Key Benefits & Quantified Performance (H2)",
+          "How It Works / 3-Step Process (H2)",
+          "Feature Breakdown & Comparative Matrix (H2)",
+          "Frequent Voice Questions & Direct BLUF Answers (H2)",
+          "Customer Reviews & Verified Proof (H2)",
+          "Final Call to Action (H2)"
+        ],
+        "searchIntentMappingStrategy": "Primary high-volume commercial keywords mapped to H1 and first H2; secondary informational and voice question long-tail keywords mapped to H3 FAQ sections.",
+        "keywordDistributionRules": "Primary target keyword in H1, first paragraph, and at least one H2. Target secondary keywords distributed evenly across body sub-sections with no clustering.",
+        "customStructureRules": "Every question-based H2/H3 heading must be immediately followed by a concise 40-50 word direct answer paragraph suitable for voice assistants."
+      },
+      "keywords": [],
+      "readerContext": "Family comparing insurance cover, premiums, exclusions and claim support.",
+      "createdAt": "2026-10-20T00:00:00.000Z",
+      "updatedAt": "2026-10-20T00:00:00.000Z"
+    },
+    {
+      "id": "bfl-profile-mutual-funds",
+      "name": "Bajaj Finserv — Mutual Funds & Investments",
+      "description": "Mutual fund and investment content.",
+      "category": "bajaj_finserv",
+      "isBuiltIn": false,
+      "contentGuidelines": {
+        "toneOfVoice": "Clear, warm and trustworthy. Explain like a helpful relationship manager, not a salesperson.",
+        "readabilityLevel": "Class 8 reading level in Indian English; explain every financial term the first time it appears.",
+        "paragraphConstraints": "Maximum 3 sentences (about 60 words) per paragraph. One idea per paragraph.",
+        "formattingRules": [
+          "Write amounts with the ₹ symbol and Indian numbering (lakh, crore), e.g. ₹5 lakh.",
+          "Write rates as \"% p.a.\" and say whether they are fixed or floating.",
+          "Put fees and charges in a table with a \"subject to change\" note.",
+          "Open every H2 with a one or two sentence direct answer.",
+          "Use numbered steps for application and documentation processes."
+        ],
+        "forbiddenCliches": [
+          "game changer",
+          "one-stop solution",
+          "hassle-free",
+          "in today's fast-paced world",
+          "unlock your dreams",
+          "best in class",
+          "delve into"
+        ],
+        "grammarAndPerspective": "Second person (\"you\", \"your\"), active voice, present tense.",
+        "ctaStandards": "Specific, honest CTAs: \"Check your eligibility\", \"Apply online\", \"Calculate your EMI\", \"Read the Key Fact Statement\".",
+        "citationFormatting": "Name the source in the sentence (e.g. \"as per RBI guidelines\") and link to the official page.",
+        "customContentRules": "Never state a rate, fee, limit, tenure or approval time that is not on the current approved rate card. Keep mandatory disclaimers next to the claims they qualify."
+      },
+      "productGuidelines": {
+        "toneOfVoice": "Clear, reassuring, transparent and respectful; never pushy.",
+        "productName": "Mutual Funds",
+        "brandName": "Bajaj Finserv",
+        "category": "Investments — mutual funds and SIPs",
+        "targetAudience": "First-time and experienced investors exploring SIPs, lump-sum investments and fund categories.",
+        "uniqueSellingPoints": [
+          "Start SIPs online",
+          "Compare fund categories",
+          "Track investments digitally"
+        ],
+        "coreValueProps": [
+          "Plain-language explanation of risk",
+          "Transparent costs (expense ratio, exit load)",
+          "Goal-based investing guidance"
+        ],
+        "forbiddenPhrases": [
+          "guaranteed returns",
+          "assured returns",
+          "risk-free",
+          "cannot lose money",
+          "double your money"
+        ],
+        "complianceNotes": "Include the SEBI-mandated disclaimer: \"Mutual Fund investments are subject to market risks, read all scheme related documents carefully.\" Past performance must be labelled as not indicative of future returns. Do not project returns. Name the AMC for each scheme.",
+        "eeatCredentials": "Schemes are offered by the asset management company named on each scheme document; mutual funds are regulated by SEBI."
+      },
+      "seoGuidelines": {
+        "voiceSearchOptimized": true,
+        "aeoDirectAnswerTarget": true,
+        "geoLlmCitationFocus": true,
+        "eeatStandard": "ymyl_strict",
+        "titleCharRange": {
+          "min": 52,
+          "max": 58
+        },
+        "metaDescCharRange": {
+          "min": 145,
+          "max": 158
+        },
+        "headingHierarchyRules": "H1 with primary entity name, H2 with question + topical modifier, H3 with evidence and data attribution.",
+        "schemaRequirements": [
+          "WebPage",
+          "BreadcrumbList",
+          "Organization",
+          "Article",
+          "Person",
+          "FAQPage"
+        ],
+        "sitemapGuidelines": "Daily changefreq, lastmod ISO-8601 timestamps, image tags included.",
+        "customRules": "Structured credentials, publication date, reviewer bio, and statutory licenses must be declared in JSON-LD and page markup."
+      },
+      "geoGuidelines": {
+        "enableGeoOptimization": true,
+        "blufDirectAnswerTarget": true,
+        "authoritativeStatistics": true,
+        "aiOverviewSnippetFormat": "definitive_paragraph",
+        "targetEngines": [
+          "google_aio",
+          "perplexity",
+          "chatgpt_search",
+          "gemini_research"
+        ],
+        "llmCitationStrategy": "Anchor authoritative source name, publication date, and methodology immediately following any numerical or regulatory claim.",
+        "entityDensityAndSchema": "Connect Primary Entity to parent Knowledge Graph entity using sameAs Wikidata and Crunchbase links.",
+        "brandQuotationStandard": "Incorporate verified corporate statements or executive quotes with credential attribution.",
+        "sourceVerificationStyle": "Direct inline citations linked to primary governmental, academic, or industry benchmark sources.",
+        "forbiddenAiPatterns": [
+          "as an ai language model",
+          "it is important to remember",
+          "in conclusion",
+          "furthermore without context"
+        ],
+        "customGeoRules": "Inject high-density factual answers in the first 45 words of every major section.",
+        "statDensityRequirement": "At least 1 verified metric or statistic per 150 words of body content.",
+        "directAnswerStandard": "40-50 word Bottom Line Up Front (BLUF) direct answers answering user search intent.",
+        "sourceAttributionStandard": "Formal regulatory, academic, or certified third-party audit reports.",
+        "multiPerspectiveRequirement": "Present structured comparison matrices or tables for LLM citation extraction."
+      },
+      "customerCentricityGuidelines": {
+        "targetCustomerPersona": "Credit-conscious consumers and families navigating critical financial or life decisions.",
+        "empathyAndTone": "Reassuring, compassionate, transparent, and non-judgmental. Eliminate sales pressure.",
+        "readingAccessibility": "8th-Grade layman readability (Flesch-Kincaid 60-70). Explain every financial/technical acronym immediately.",
+        "maxSentenceWords": 20,
+        "maxParagraphSentences": 3,
+        "corePainPointsToAddress": [
+          "Fear of hidden origination or processing fees",
+          "Anxiety about credit score hit during rate checks",
+          "Unclear repayment schedules or compounding interest",
+          "Unresponsive customer support during urgent disputes"
+        ],
+        "frictionPatternsToFlag": [
+          "Buried fee disclosures or asterisks without direct explanation",
+          "Aggressive countdown/false scarcity timers",
+          "Vague APR claims like \"Rates as low as...*\" without typical ranges",
+          "Complex run-on multi-clause sentences (>20 words)",
+          "Missing human contact phone or dispute assistance details"
+        ],
+        "decisionJourneyOrder": "1. Soft-Check Reassurance -> 2. Transparent Cost Calculator -> 3. Simple 3-Step Process -> 4. Clear FAQ & Human Support Access",
+        "objectionHandlingRules": [
+          "Proactively explain eligibility if credit score is below average",
+          "Directly state there are zero penalties for early prepayment or payoff",
+          "Clarify state licensing, security standards, and FDIC/partner bank backing"
+        ],
+        "trustAndReassuranceSignals": [
+          "\"No impact on credit score\" soft check badge",
+          "256-bit SSL bank-grade security encryption",
+          "Dedicated toll-free human phone support with hours",
+          "BBB / Trustpilot verified rating badge",
+          "Full statutory licensing & APR disclosure block"
+        ],
+        "scoringWeights": {
+          "laymanAccessibilityWeight": 30,
+          "objectionHandlingWeight": 25,
+          "frictionEliminationWeight": 25,
+          "journeyStructureWeight": 20
+        },
+        "customCustomerRules": "Every rate quote must display an illustrative APR example with representative loan terms and total repayment calculation."
+      },
+      "structureMappingGuidelines": {
+        "headingHierarchyRule": "Strict single H1 topic anchor -> H2 major search-volume chapters -> H3 conversational voice queries. Never skip heading levels (no H2 directly into H4).",
+        "requirePrimaryKeywordInH1": true,
+        "minKeywordFrequency": 2,
+        "maxKeywordDensityPercent": 2.8,
+        "targetKeywordsInHeadingsMinPercent": 80,
+        "headingWordCountLimit": {
+          "min": 4,
+          "max": 10
+        },
+        "voiceQuestionHeadingsTarget": 40,
+        "preferredSectionOrder": [
+          "Hero Definition & Core Search Intent (H1)",
+          "Key Benefits & Quantified Performance (H2)",
+          "How It Works / 3-Step Process (H2)",
+          "Feature Breakdown & Comparative Matrix (H2)",
+          "Frequent Voice Questions & Direct BLUF Answers (H2)",
+          "Customer Reviews & Verified Proof (H2)",
+          "Final Call to Action (H2)"
+        ],
+        "searchIntentMappingStrategy": "Primary high-volume commercial keywords mapped to H1 and first H2; secondary informational and voice question long-tail keywords mapped to H3 FAQ sections.",
+        "keywordDistributionRules": "Primary target keyword in H1, first paragraph, and at least one H2. Target secondary keywords distributed evenly across body sub-sections with no clustering.",
+        "customStructureRules": "Every question-based H2/H3 heading must be immediately followed by a concise 40-50 word direct answer paragraph suitable for voice assistants."
+      },
+      "keywords": [],
+      "readerContext": "Investor exploring SIPs who needs risk explained plainly and costs made clear.",
+      "createdAt": "2026-10-20T00:00:00.000Z",
+      "updatedAt": "2026-10-20T00:00:00.000Z"
+    }
+  ],
+  "presets": {
+    "content": [
+      {
+        "id": "bfl-content-standard",
+        "name": "Bajaj Finserv — Customer Content Standard",
+        "description": "House style for bajajfinserv.in customer pages: plain Indian English, transparent costs, disclosures next to claims.",
+        "category": "bajaj_finserv",
+        "isBuiltIn": false,
+        "createdAt": "2026-10-20T00:00:00.000Z",
+        "updatedAt": "2026-10-20T00:00:00.000Z",
+        "guidelines": {
+          "toneOfVoice": "Clear, warm and trustworthy. Explain like a helpful relationship manager, not a salesperson.",
+          "readabilityLevel": "Class 8 reading level in Indian English; explain every financial term the first time it appears.",
+          "paragraphConstraints": "Maximum 3 sentences (about 60 words) per paragraph. One idea per paragraph.",
+          "formattingRules": [
+            "Write amounts with the ₹ symbol and Indian numbering (lakh, crore), e.g. ₹5 lakh.",
+            "Write rates as \"% p.a.\" and say whether they are fixed or floating.",
+            "Put fees and charges in a table with a \"subject to change\" note.",
+            "Open every H2 with a one or two sentence direct answer.",
+            "Use numbered steps for application and documentation processes."
+          ],
+          "forbiddenCliches": [
+            "game changer",
+            "one-stop solution",
+            "hassle-free",
+            "in today's fast-paced world",
+            "unlock your dreams",
+            "best in class",
+            "delve into"
+          ],
+          "grammarAndPerspective": "Second person (\"you\", \"your\"), active voice, present tense.",
+          "ctaStandards": "Specific, honest CTAs: \"Check your eligibility\", \"Apply online\", \"Calculate your EMI\", \"Read the Key Fact Statement\".",
+          "citationFormatting": "Name the source in the sentence (e.g. \"as per RBI guidelines\") and link to the official page.",
+          "customContentRules": "Never state a rate, fee, limit, tenure or approval time that is not on the current approved rate card. Keep mandatory disclaimers next to the claims they qualify."
+        }
+      }
+    ],
+    "product": [
+      {
+        "id": "bfl-product-personal-loan",
+        "name": "Bajaj Finserv — Personal Loan",
+        "description": "Unsecured personal loans offered by Bajaj Finance Limited.",
+        "category": "bajaj_finserv",
+        "isBuiltIn": false,
+        "createdAt": "2026-10-20T00:00:00.000Z",
+        "updatedAt": "2026-10-20T00:00:00.000Z",
+        "guidelines": {
+          "toneOfVoice": "Clear, reassuring, transparent and respectful; never pushy.",
+          "productName": "Personal Loan",
+          "brandName": "Bajaj Finance",
+          "category": "Lending — Unsecured personal loans",
+          "targetAudience": "Salaried and self-employed individuals in India planning a large expense or consolidating debt.",
+          "uniqueSellingPoints": [
+            "Online application",
+            "Flexible repayment tenure",
+            "Minimal documentation for eligible customers"
+          ],
+          "coreValueProps": [
+            "Clear eligibility criteria",
+            "Transparent fees and charges",
+            "Fast online process"
+          ],
+          "forbiddenPhrases": [
+            "guaranteed approval",
+            "approval guaranteed",
+            "100% approval",
+            "no credit check",
+            "lowest interest rate in india",
+            "zero risk",
+            "risk-free",
+            "free money"
+          ],
+          "complianceNotes": "Name the lender as \"Bajaj Finance Limited\" (an RBI-registered NBFC) where the lending entity is referenced; keep product names that contain \"Bajaj Finserv\" unchanged. Interest rates, fees and charges must be quoted only from the current approved rate card and described as \"subject to change\". Where rates are discussed, refer readers to the Key Fact Statement (KFS) and Annual Percentage Rate (APR). Loan approval is at the lender's discretion and subject to eligibility and documentation. Link to the grievance redressal page; mention the RBI Integrated Ombudsman Scheme where escalation is discussed.",
+          "eeatCredentials": "Lender: Bajaj Finance Limited, a non-banking financial company registered with the Reserve Bank of India."
+        }
+      },
+      {
+        "id": "bfl-product-business-loan",
+        "name": "Bajaj Finserv — Business Loan",
+        "description": "Business and MSME loans offered by Bajaj Finance Limited.",
+        "category": "bajaj_finserv",
+        "isBuiltIn": false,
+        "createdAt": "2026-10-20T00:00:00.000Z",
+        "updatedAt": "2026-10-20T00:00:00.000Z",
+        "guidelines": {
+          "toneOfVoice": "Clear, reassuring, transparent and respectful; never pushy.",
+          "productName": "Business Loan",
+          "brandName": "Bajaj Finance",
+          "category": "Lending — Business & MSME loans",
+          "targetAudience": "Self-employed professionals, proprietors and MSME owners needing working capital or expansion funds.",
+          "uniqueSellingPoints": [
+            "Online application",
+            "Collateral-free options for eligible businesses",
+            "Flexible repayment"
+          ],
+          "coreValueProps": [
+            "Clear eligibility and documents list",
+            "Transparent charges",
+            "Repayment that fits business cash flow"
+          ],
+          "forbiddenPhrases": [
+            "guaranteed approval",
+            "approval guaranteed",
+            "100% approval",
+            "no credit check",
+            "lowest interest rate in india",
+            "zero risk",
+            "risk-free",
+            "free money"
+          ],
+          "complianceNotes": "Name the lender as \"Bajaj Finance Limited\" (an RBI-registered NBFC) where the lending entity is referenced; keep product names that contain \"Bajaj Finserv\" unchanged. Interest rates, fees and charges must be quoted only from the current approved rate card and described as \"subject to change\". Where rates are discussed, refer readers to the Key Fact Statement (KFS) and Annual Percentage Rate (APR). Loan approval is at the lender's discretion and subject to eligibility and documentation. Link to the grievance redressal page; mention the RBI Integrated Ombudsman Scheme where escalation is discussed. State GST/registration requirements exactly as listed on the approved eligibility page.",
+          "eeatCredentials": "Lender: Bajaj Finance Limited, a non-banking financial company registered with the Reserve Bank of India."
+        }
+      },
+      {
+        "id": "bfl-product-home-loan",
+        "name": "Bajaj Finserv — Home Loan",
+        "description": "Home loans. Titles use \"Bajaj Finance\" as on bajajfinserv.in; the lender named in disclosures is Bajaj Housing Finance Limited (verify per page).",
+        "category": "bajaj_finserv",
+        "isBuiltIn": false,
+        "createdAt": "2026-10-20T00:00:00.000Z",
+        "updatedAt": "2026-10-20T00:00:00.000Z",
+        "guidelines": {
+          "toneOfVoice": "Clear, reassuring, transparent and respectful; never pushy.",
+          "productName": "Home Loan",
+          "brandName": "Bajaj Finance",
+          "category": "Lending — Home loans",
+          "targetAudience": "First-time and repeat home buyers, and borrowers looking to transfer an existing home loan.",
+          "uniqueSellingPoints": [
+            "Balance transfer option",
+            "Long repayment tenure",
+            "Online application and tracking"
+          ],
+          "coreValueProps": [
+            "Clear eligibility and property document requirements",
+            "Transparent processing charges",
+            "Guidance through the loan journey"
+          ],
+          "forbiddenPhrases": [
+            "guaranteed approval",
+            "approval guaranteed",
+            "100% approval",
+            "no credit check",
+            "lowest interest rate in india",
+            "zero risk",
+            "risk-free",
+            "free money"
+          ],
+          "complianceNotes": "Name the lender as \"Bajaj Housing Finance Limited\" (a housing finance company registered with the National Housing Bank) unless the page states otherwise. Quote rates only from the current approved rate card, state whether they are fixed or floating and \"subject to change\". Tax-benefit content must say benefits are as per prevailing tax laws and advise readers to consult a tax advisor. Approval is subject to eligibility, property documents and the lender's policies.",
+          "eeatCredentials": "Lender: Bajaj Housing Finance Limited, a housing finance company registered with the National Housing Bank."
+        }
+      },
+      {
+        "id": "bfl-product-gold-loan",
+        "name": "Bajaj Finserv — Gold Loan",
+        "description": "Loans against gold jewellery offered by Bajaj Finance Limited.",
+        "category": "bajaj_finserv",
+        "isBuiltIn": false,
+        "createdAt": "2026-10-20T00:00:00.000Z",
+        "updatedAt": "2026-10-20T00:00:00.000Z",
+        "guidelines": {
+          "toneOfVoice": "Clear, reassuring, transparent and respectful; never pushy.",
+          "productName": "Gold Loan",
+          "brandName": "Bajaj Finance",
+          "category": "Lending — Secured loans against gold",
+          "targetAudience": "Individuals who own gold jewellery and need short-term funds quickly.",
+          "uniqueSellingPoints": [
+            "Quick disbursal at branches",
+            "Flexible repayment options",
+            "Secure storage of pledged gold"
+          ],
+          "coreValueProps": [
+            "Clear valuation process",
+            "Transparent charges",
+            "Safe custody of jewellery"
+          ],
+          "forbiddenPhrases": [
+            "guaranteed approval",
+            "approval guaranteed",
+            "100% approval",
+            "no credit check",
+            "lowest interest rate in india",
+            "zero risk",
+            "risk-free",
+            "free money"
+          ],
+          "complianceNotes": "Name the lender as \"Bajaj Finance Limited\" (an RBI-registered NBFC) where the lending entity is referenced; keep product names that contain \"Bajaj Finserv\" unchanged. Interest rates, fees and charges must be quoted only from the current approved rate card and described as \"subject to change\". Where rates are discussed, refer readers to the Key Fact Statement (KFS) and Annual Percentage Rate (APR). Loan approval is at the lender's discretion and subject to eligibility and documentation. Link to the grievance redressal page; mention the RBI Integrated Ombudsman Scheme where escalation is discussed. Loan-to-value limits must match current RBI norms and the approved rate card; explain auction policy for non-repayment plainly.",
+          "eeatCredentials": "Lender: Bajaj Finance Limited, a non-banking financial company registered with the Reserve Bank of India."
+        }
+      },
+      {
+        "id": "bfl-product-fixed-deposit",
+        "name": "Bajaj Finserv — Fixed Deposit",
+        "description": "Corporate fixed deposits accepted by Bajaj Finance Limited.",
+        "category": "bajaj_finserv",
+        "isBuiltIn": false,
+        "createdAt": "2026-10-20T00:00:00.000Z",
+        "updatedAt": "2026-10-20T00:00:00.000Z",
+        "guidelines": {
+          "toneOfVoice": "Clear, reassuring, transparent and respectful; never pushy.",
+          "productName": "Fixed Deposit",
+          "brandName": "Bajaj Finance",
+          "category": "Deposits — Corporate fixed deposits",
+          "targetAudience": "Savers and senior citizens looking for predictable returns on their savings.",
+          "uniqueSellingPoints": [
+            "Choice of tenures",
+            "Cumulative and non-cumulative payout options",
+            "Online booking"
+          ],
+          "coreValueProps": [
+            "Predictable returns",
+            "Clear premature-withdrawal rules",
+            "Transparent payout options"
+          ],
+          "forbiddenPhrases": [
+            "risk-free",
+            "zero risk",
+            "insured by dicgc",
+            "government guaranteed",
+            "guaranteed by rbi"
+          ],
+          "complianceNotes": "Deposits are accepted by Bajaj Finance Limited. State clearly that deposits with NBFCs are not insured by DICGC. Quote interest rates and credit ratings only from the current approved rate card and rating letters, with the effective date. Explain premature withdrawal rules and TDS as per prevailing tax laws.",
+          "eeatCredentials": "Issuer: Bajaj Finance Limited, a deposit-taking NBFC registered with the Reserve Bank of India."
+        }
+      },
+      {
+        "id": "bfl-product-insta-emi-card",
+        "name": "Bajaj Finserv — Insta EMI Card & EMI Network",
+        "description": "EMI card and no-cost EMI shopping on the Bajaj Finserv EMI Network.",
+        "category": "bajaj_finserv",
+        "isBuiltIn": false,
+        "createdAt": "2026-10-20T00:00:00.000Z",
+        "updatedAt": "2026-10-20T00:00:00.000Z",
+        "guidelines": {
+          "toneOfVoice": "Clear, reassuring, transparent and respectful; never pushy.",
+          "productName": "Insta EMI Card",
+          "brandName": "Bajaj Finance",
+          "category": "Consumer finance — EMI card and EMI Network",
+          "targetAudience": "Shoppers who want to buy electronics, appliances and other products on EMI at partner stores and online.",
+          "uniqueSellingPoints": [
+            "Shop on EMI at partner stores and online",
+            "Pre-approved limit for eligible customers",
+            "Digital card"
+          ],
+          "coreValueProps": [
+            "Clear EMI and fee terms",
+            "Wide partner network",
+            "Simple activation"
+          ],
+          "forbiddenPhrases": [
+            "guaranteed approval",
+            "free card for everyone",
+            "no charges ever",
+            "zero risk"
+          ],
+          "complianceNotes": "bajajfinserv.in refers to the card as \"Bajaj Finance Insta EMI Card\"; the lender is Bajaj Finance Limited. \"No Cost EMI\" must explain how the cost is covered (e.g. by the brand or merchant) and any processing fee. Joining or annual fees and limits must be quoted from the approved fee schedule.",
+          "eeatCredentials": "Credit facility provided by Bajaj Finance Limited, an RBI-registered NBFC."
+        }
+      },
+      {
+        "id": "bfl-product-credit-card",
+        "name": "Bajaj Finserv — Co-branded Credit Cards",
+        "description": "Credit cards co-branded with partner banks.",
+        "category": "bajaj_finserv",
+        "isBuiltIn": false,
+        "createdAt": "2026-10-20T00:00:00.000Z",
+        "updatedAt": "2026-10-20T00:00:00.000Z",
+        "guidelines": {
+          "toneOfVoice": "Clear, reassuring, transparent and respectful; never pushy.",
+          "productName": "Bajaj Finserv Co-branded Credit Card",
+          "brandName": "Bajaj Finserv",
+          "category": "Cards — Co-branded credit cards",
+          "targetAudience": "Customers comparing credit cards for rewards, EMI conversion and everyday spends.",
+          "uniqueSellingPoints": [
+            "Rewards on everyday spends",
+            "EMI conversion on large purchases",
+            "Online application"
+          ],
+          "coreValueProps": [
+            "Clear fees, charges and reward rules",
+            "Transparent interest on revolving credit",
+            "Secure usage"
+          ],
+          "forbiddenPhrases": [
+            "guaranteed approval",
+            "lifetime free for all",
+            "unlimited rewards",
+            "zero interest always"
+          ],
+          "complianceNotes": "Co-branded cards are issued by the partner bank named on the card; state the issuer and that issuance is subject to the bank's policies. Fees, finance charges and reward rules must match the issuer's current Most Important Terms and Conditions (MITC); link to the MITC.",
+          "eeatCredentials": "Issuer: the partner bank named on the card, regulated by the Reserve Bank of India."
+        }
+      },
+      {
+        "id": "bfl-product-insurance",
+        "name": "Bajaj Finserv — Insurance",
+        "description": "Insurance products distributed as a corporate agent.",
+        "category": "bajaj_finserv",
+        "isBuiltIn": false,
+        "createdAt": "2026-10-20T00:00:00.000Z",
+        "updatedAt": "2026-10-20T00:00:00.000Z",
+        "guidelines": {
+          "toneOfVoice": "Clear, reassuring, transparent and respectful; never pushy.",
+          "productName": "Insurance",
+          "brandName": "Bajaj Finserv",
+          "category": "Insurance distribution — health, life, motor and pocket insurance",
+          "targetAudience": "Individuals and families comparing insurance cover for health, life, vehicles and everyday risks.",
+          "uniqueSellingPoints": [
+            "Compare plans from partner insurers",
+            "Buy online",
+            "Help with renewals"
+          ],
+          "coreValueProps": [
+            "Clear inclusions and exclusions",
+            "Transparent premiums",
+            "Support during claims"
+          ],
+          "forbiddenPhrases": [
+            "guaranteed claim settlement",
+            "100% claim approval",
+            "covers everything",
+            "no exclusions",
+            "risk-free"
+          ],
+          "complianceNotes": "Include \"Insurance is the subject matter of solicitation.\" Name the insurer for each plan; Bajaj Finance Limited acts as a corporate agent registered with IRDAI (add the registration number from the approved disclosure). Benefits, exclusions and premiums must match the insurer's policy wording; advise readers to read the policy wording before buying.",
+          "eeatCredentials": "Distributor: Bajaj Finance Limited, registered with IRDAI as a corporate agent. Insurer: as named on each plan."
+        }
+      },
+      {
+        "id": "bfl-product-mutual-funds",
+        "name": "Bajaj Finserv — Mutual Funds & Investments",
+        "description": "Mutual fund and investment content.",
+        "category": "bajaj_finserv",
+        "isBuiltIn": false,
+        "createdAt": "2026-10-20T00:00:00.000Z",
+        "updatedAt": "2026-10-20T00:00:00.000Z",
+        "guidelines": {
+          "toneOfVoice": "Clear, reassuring, transparent and respectful; never pushy.",
+          "productName": "Mutual Funds",
+          "brandName": "Bajaj Finserv",
+          "category": "Investments — mutual funds and SIPs",
+          "targetAudience": "First-time and experienced investors exploring SIPs, lump-sum investments and fund categories.",
+          "uniqueSellingPoints": [
+            "Start SIPs online",
+            "Compare fund categories",
+            "Track investments digitally"
+          ],
+          "coreValueProps": [
+            "Plain-language explanation of risk",
+            "Transparent costs (expense ratio, exit load)",
+            "Goal-based investing guidance"
+          ],
+          "forbiddenPhrases": [
+            "guaranteed returns",
+            "assured returns",
+            "risk-free",
+            "cannot lose money",
+            "double your money"
+          ],
+          "complianceNotes": "Include the SEBI-mandated disclaimer: \"Mutual Fund investments are subject to market risks, read all scheme related documents carefully.\" Past performance must be labelled as not indicative of future returns. Do not project returns. Name the AMC for each scheme.",
+          "eeatCredentials": "Schemes are offered by the asset management company named on each scheme document; mutual funds are regulated by SEBI."
+        }
+      }
+    ],
+    "seo": [
+      {
+        "id": "seo-preset-strict-eeat",
+        "name": "Strict YMYL & LLM Citation Authority",
+        "description": "High-authority setup requiring verified schema graphs (Article, Person, Org) and strict metadata limits.",
+        "category": "eeat_ymyl",
+        "isBuiltIn": false,
+        "createdAt": "2025-01-01T00:00:00.000Z",
+        "updatedAt": "2025-01-01T00:00:00.000Z",
+        "guidelines": {
+          "voiceSearchOptimized": true,
+          "aeoDirectAnswerTarget": true,
+          "geoLlmCitationFocus": true,
+          "eeatStandard": "ymyl_strict",
+          "titleCharRange": {
+            "min": 52,
+            "max": 58
+          },
+          "metaDescCharRange": {
+            "min": 145,
+            "max": 158
+          },
+          "headingHierarchyRules": "H1 with primary entity name, H2 with question + topical modifier, H3 with evidence and data attribution.",
+          "schemaRequirements": [
+            "WebPage",
+            "BreadcrumbList",
+            "Organization",
+            "Article",
+            "Person",
+            "FAQPage"
+          ],
+          "sitemapGuidelines": "Daily changefreq, lastmod ISO-8601 timestamps, image tags included.",
+          "customRules": "Structured credentials, publication date, reviewer bio, and statutory licenses must be declared in JSON-LD and page markup."
+        }
+      }
+    ],
+    "geo": [
+      {
+        "id": "geo-preset-master-citation",
+        "name": "Perplexity & ChatGPT Search Citation Master",
+        "description": "Engineered for AI answer engines with BLUF direct answers, authoritative statistics, and structured source anchors.",
+        "category": "ai_engines",
+        "isBuiltIn": false,
+        "createdAt": "2025-01-01T00:00:00.000Z",
+        "updatedAt": "2025-01-01T00:00:00.000Z",
+        "guidelines": {
+          "enableGeoOptimization": true,
+          "blufDirectAnswerTarget": true,
+          "authoritativeStatistics": true,
+          "aiOverviewSnippetFormat": "definitive_paragraph",
+          "targetEngines": [
+            "google_aio",
+            "perplexity",
+            "chatgpt_search",
+            "gemini_research"
+          ],
+          "llmCitationStrategy": "Anchor authoritative source name, publication date, and methodology immediately following any numerical or regulatory claim.",
+          "entityDensityAndSchema": "Connect Primary Entity to parent Knowledge Graph entity using sameAs Wikidata and Crunchbase links.",
+          "brandQuotationStandard": "Incorporate verified corporate statements or executive quotes with credential attribution.",
+          "sourceVerificationStyle": "Direct inline citations linked to primary governmental, academic, or industry benchmark sources.",
+          "forbiddenAiPatterns": [
+            "as an ai language model",
+            "it is important to remember",
+            "in conclusion",
+            "furthermore without context"
+          ],
+          "customGeoRules": "Inject high-density factual answers in the first 45 words of every major section.",
+          "statDensityRequirement": "At least 1 verified metric or statistic per 150 words of body content.",
+          "directAnswerStandard": "40-50 word Bottom Line Up Front (BLUF) direct answers answering user search intent.",
+          "sourceAttributionStandard": "Formal regulatory, academic, or certified third-party audit reports.",
+          "multiPerspectiveRequirement": "Present structured comparison matrices or tables for LLM citation extraction."
+        }
+      }
+    ],
+    "customerCentricity": [
+      {
+        "id": "customer-preset-ymyl-empathy",
+        "name": "Empathetic Consumer & YMYL Transparency",
+        "description": "Designed for high-trust financial and sensitive decisions. Low cognitive load, proactive objection handling, and clear reassurance.",
+        "category": "financial_ymyl",
+        "isBuiltIn": false,
+        "createdAt": "2025-01-01T00:00:00.000Z",
+        "updatedAt": "2025-01-01T00:00:00.000Z",
+        "guidelines": {
+          "targetCustomerPersona": "Credit-conscious consumers and families navigating critical financial or life decisions.",
+          "empathyAndTone": "Reassuring, compassionate, transparent, and non-judgmental. Eliminate sales pressure.",
+          "readingAccessibility": "8th-Grade layman readability (Flesch-Kincaid 60-70). Explain every financial/technical acronym immediately.",
+          "maxSentenceWords": 20,
+          "maxParagraphSentences": 3,
+          "corePainPointsToAddress": [
+            "Fear of hidden origination or processing fees",
+            "Anxiety about credit score hit during rate checks",
+            "Unclear repayment schedules or compounding interest",
+            "Unresponsive customer support during urgent disputes"
+          ],
+          "frictionPatternsToFlag": [
+            "Buried fee disclosures or asterisks without direct explanation",
+            "Aggressive countdown/false scarcity timers",
+            "Vague APR claims like \"Rates as low as...*\" without typical ranges",
+            "Complex run-on multi-clause sentences (>20 words)",
+            "Missing human contact phone or dispute assistance details"
+          ],
+          "decisionJourneyOrder": "1. Soft-Check Reassurance -> 2. Transparent Cost Calculator -> 3. Simple 3-Step Process -> 4. Clear FAQ & Human Support Access",
+          "objectionHandlingRules": [
+            "Proactively explain eligibility if credit score is below average",
+            "Directly state there are zero penalties for early prepayment or payoff",
+            "Clarify state licensing, security standards, and FDIC/partner bank backing"
+          ],
+          "trustAndReassuranceSignals": [
+            "\"No impact on credit score\" soft check badge",
+            "256-bit SSL bank-grade security encryption",
+            "Dedicated toll-free human phone support with hours",
+            "BBB / Trustpilot verified rating badge",
+            "Full statutory licensing & APR disclosure block"
+          ],
+          "scoringWeights": {
+            "laymanAccessibilityWeight": 30,
+            "objectionHandlingWeight": 25,
+            "frictionEliminationWeight": 25,
+            "journeyStructureWeight": 20
+          },
+          "customCustomerRules": "Every rate quote must display an illustrative APR example with representative loan terms and total repayment calculation."
+        }
+      }
+    ],
+    "structureMapping": [
+      {
+        "id": "structure-preset-voice-aeo",
+        "name": "High-Intent Commercial & Voice AEO Architecture",
+        "description": "Structured for high search volume capture, single H1 anchor, conversational question H2/H3s, and direct AEO voice snippets.",
+        "category": "voice_aeo",
+        "isBuiltIn": false,
+        "createdAt": "2025-01-01T00:00:00.000Z",
+        "updatedAt": "2025-01-01T00:00:00.000Z",
+        "guidelines": {
+          "headingHierarchyRule": "Strict single H1 topic anchor -> H2 major search-volume chapters -> H3 conversational voice queries. Never skip heading levels (no H2 directly into H4).",
+          "requirePrimaryKeywordInH1": true,
+          "minKeywordFrequency": 2,
+          "maxKeywordDensityPercent": 2.8,
+          "targetKeywordsInHeadingsMinPercent": 80,
+          "headingWordCountLimit": {
+            "min": 4,
+            "max": 10
+          },
+          "voiceQuestionHeadingsTarget": 40,
+          "preferredSectionOrder": [
+            "Hero Definition & Core Search Intent (H1)",
+            "Key Benefits & Quantified Performance (H2)",
+            "How It Works / 3-Step Process (H2)",
+            "Feature Breakdown & Comparative Matrix (H2)",
+            "Frequent Voice Questions & Direct BLUF Answers (H2)",
+            "Customer Reviews & Verified Proof (H2)",
+            "Final Call to Action (H2)"
+          ],
+          "searchIntentMappingStrategy": "Primary high-volume commercial keywords mapped to H1 and first H2; secondary informational and voice question long-tail keywords mapped to H3 FAQ sections.",
+          "keywordDistributionRules": "Primary target keyword in H1, first paragraph, and at least one H2. Target secondary keywords distributed evenly across body sub-sections with no clustering.",
+          "customStructureRules": "Every question-based H2/H3 heading must be immediately followed by a concise 40-50 word direct answer paragraph suitable for voice assistants."
+        }
+      }
+    ]
+  }
+}

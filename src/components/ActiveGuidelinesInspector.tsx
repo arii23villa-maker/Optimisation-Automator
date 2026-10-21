@@ -191,6 +191,7 @@ export const ActiveGuidelinesInspector: React.FC<ActiveGuidelinesInspectorProps>
                 }}
                 className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs font-medium text-slate-100 focus:ring-1 focus:ring-purple-500 focus:outline-none cursor-pointer"
               >
+                <option value="">{savedContentPresets.length ? 'None selected' : 'None saved yet'}</option>
                 {savedContentPresets.map((preset) => (
                   <option key={preset.id} value={preset.id}>
                     {preset.name} {preset.isBuiltIn ? '(Preset)' : '(Custom)'}
@@ -204,7 +205,7 @@ export const ActiveGuidelinesInspector: React.FC<ActiveGuidelinesInspectorProps>
               <div className="flex items-center justify-between text-slate-300">
                 <span className="text-slate-400">Tone:</span>
                 <span className="font-medium text-purple-200 truncate max-w-[140px]" title={contentGuidelines.toneOfVoice}>
-                  {contentGuidelines.toneOfVoice ? contentGuidelines.toneOfVoice.split(',')[0] : 'Authoritative'}
+                  {contentGuidelines.toneOfVoice ? contentGuidelines.toneOfVoice.split(',')[0] : 'Not set'}
                 </span>
               </div>
               <div className="flex items-center justify-between text-slate-300">
@@ -280,6 +281,7 @@ export const ActiveGuidelinesInspector: React.FC<ActiveGuidelinesInspectorProps>
                 }}
                 className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs font-medium text-slate-100 focus:ring-1 focus:ring-indigo-500 focus:outline-none cursor-pointer"
               >
+                <option value="">{savedProductPresets.length ? 'None selected' : 'None saved yet'}</option>
                 {savedProductPresets.map((preset) => (
                   <option key={preset.id} value={preset.id}>
                     {preset.name} {preset.isBuiltIn ? '(Preset)' : '(Custom)'}
@@ -364,6 +366,7 @@ export const ActiveGuidelinesInspector: React.FC<ActiveGuidelinesInspectorProps>
                 }}
                 className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs font-medium text-slate-100 focus:ring-1 focus:ring-blue-500 focus:outline-none cursor-pointer"
               >
+                <option value="">{savedSeoPresets.length ? 'None selected' : 'None saved yet'}</option>
                 {savedSeoPresets.map((preset) => (
                   <option key={preset.id} value={preset.id}>
                     {preset.name} {preset.isBuiltIn ? '(Preset)' : '(Custom)'}
@@ -452,6 +455,7 @@ export const ActiveGuidelinesInspector: React.FC<ActiveGuidelinesInspectorProps>
                 }}
                 className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-lg text-xs font-medium text-slate-100 focus:ring-1 focus:ring-emerald-500 focus:outline-none cursor-pointer"
               >
+                <option value="">{savedGeoPresets.length ? 'None selected' : 'None saved yet'}</option>
                 {savedGeoPresets.map((preset) => (
                   <option key={preset.id} value={preset.id}>
                     {preset.name} {preset.isBuiltIn ? '(Preset)' : '(Custom)'}
@@ -538,6 +542,7 @@ export const ActiveGuidelinesInspector: React.FC<ActiveGuidelinesInspectorProps>
                   onChange={(e) => onSelectStructureMappingPreset?.(e.target.value)}
                   className="w-full px-2.5 py-1 bg-slate-900 border border-slate-700 rounded-lg text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer truncate"
                 >
+                  <option value="">{savedStructureMappingPresets.length ? 'None selected' : 'None saved yet'}</option>
                   {savedStructureMappingPresets.map(preset => (
                     <option key={preset.id} value={preset.id}>
                       {preset.name} {preset.isBuiltIn ? '(Preset)' : '(Custom)'}
@@ -625,6 +630,7 @@ export const ActiveGuidelinesInspector: React.FC<ActiveGuidelinesInspectorProps>
                   onChange={(e) => onSelectCustomerCentricityPreset?.(e.target.value)}
                   className="w-full px-2.5 py-1 bg-slate-900 border border-slate-700 rounded-lg text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-rose-500 cursor-pointer truncate"
                 >
+                  <option value="">{savedCustomerCentricityPresets.length ? 'None selected' : 'None saved yet'}</option>
                   {savedCustomerCentricityPresets.map(preset => (
                     <option key={preset.id} value={preset.id}>
                       {preset.name} {preset.isBuiltIn ? '(Preset)' : '(Custom)'}

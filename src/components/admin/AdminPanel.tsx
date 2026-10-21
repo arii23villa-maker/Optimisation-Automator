@@ -225,7 +225,7 @@ const Login: React.FC<{ onDone: (pw: string) => void; error: string | null }> = 
         <button disabled={busy || !pw} className="w-full h-10 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium disabled:opacity-50">
           {busy ? 'Checking…' : 'Open admin panel'}
         </button>
-        <a href="/" className="block text-center text-[13px] text-slate-500 hover:text-slate-300">Back to the tool</a>
+        <a href="/app" className="block text-center text-[13px] text-slate-500 hover:text-slate-300">Back to the tool</a>
       </form>
     </div>
   );
@@ -332,7 +332,7 @@ export const AdminPanel: React.FC = () => {
               </div>
             </div>
             <div className="no-wrap flex items-center gap-1.5 shrink-0">
-              <a href="/" className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-lg border border-slate-700 text-[13px] text-slate-300 hover:bg-slate-800">
+              <a href="/app" className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-lg border border-slate-700 text-[13px] text-slate-300 hover:bg-slate-800">
                 <ArrowLeft className="w-4 h-4" /> Back to tool
               </a>
               <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="h-9 w-9 flex items-center justify-center rounded-lg border border-slate-700 text-slate-400 hover:bg-slate-800" aria-label="Toggle theme">

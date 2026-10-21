@@ -121,6 +121,7 @@ export function computeAdminMetrics(opts: {
   const rlReasons = new Map<string, { reason: string; provider: string; model: string; last7d: number; allTime: number; lastAt: string }>();
   for (const e of calls) {
     if (e.status !== 'rate_limited' && e.status !== 'skipped') continue;
+    if (e.errorType === 'deadline') continue; // a hosting time limit, not a provider limit
     // Older entries carried the request size in the reason; group them with the current wording.
     const reason = (e.reason || 'Rate limited').replace(
       /Too large for Groq's tokens-per-minute limit \(needs ~[\d,]+ of ([\d,]+)\)/,
@@ -229,7 +230,7 @@ export function computeAdminMetrics(opts: {
     rateLimits: {
       last7d: calls.filter((e) => (e.status === 'rate_limited') && recent(e.ts)).length,
       allTime: calls.filter((e) => e.status === 'rate_limited').length,
-      avoided7d: calls.filter((e) => e.status === 'skipped' && recent(e.ts)).length,
+      avoided7d: calls.filter((e) => e.status === 'skipped' && e.errorType !== 'deadline' && recent(e.ts)).length,
       reasons: [...rlReasons.values()].sort((a, b) => b.allTime - a.allTime),
     },
     jobMatrix,

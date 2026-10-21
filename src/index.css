@@ -107,6 +107,81 @@
   }
 }
 
+/* Landing page (src/components/LandingPage.tsx). Colours come from the palette, so both themes work. */
+@layer components {
+  .lp-serif {
+    font-family: "Instrument Serif", ui-serif, Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+  .lp-mesh {
+    position: absolute;
+    inset: -25% -10% auto -10%;
+    height: 120%;
+    background:
+      radial-gradient(38rem 26rem at 78% 18%, color-mix(in oklab, var(--color-violet-500) 26%, transparent), transparent 65%),
+      radial-gradient(34rem 24rem at 18% 8%, color-mix(in oklab, var(--color-blue-500) 22%, transparent), transparent 65%),
+      radial-gradient(30rem 22rem at 55% 70%, color-mix(in oklab, var(--color-teal-500) 16%, transparent), transparent 65%);
+    filter: blur(24px);
+    animation: lp-drift 24s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  .lp-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, color-mix(in oklab, var(--color-slate-700) 45%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in oklab, var(--color-slate-700) 45%, transparent) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 35%, black, transparent 75%);
+    opacity: 0.35;
+    pointer-events: none;
+  }
+  .lp-card {
+    background: color-mix(in oklab, var(--color-slate-900) 82%, transparent);
+    border: 1px solid var(--color-slate-800);
+    backdrop-filter: blur(12px);
+  }
+  .lp-marquee {
+    display: flex;
+    width: max-content;
+    animation: lp-marquee 45s linear infinite;
+  }
+  .lp-marquee:hover {
+    animation-play-state: paused;
+  }
+  .lp-dash {
+    stroke-dasharray: 5 7;
+    animation: lp-dash 1.4s linear infinite;
+  }
+  .lp-strike {
+    background: linear-gradient(var(--color-rose-500), var(--color-rose-500)) no-repeat 0 58% / 0% 2px;
+    transition: background-size 0.7s ease 0.3s;
+  }
+  .lp-strike[data-on="true"] {
+    background-size: 100% 2px;
+  }
+  .lp-glow {
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-indigo-500) 40%, transparent),
+      0 18px 50px -18px color-mix(in oklab, var(--color-indigo-500) 55%, transparent);
+  }
+}
+
+@keyframes lp-drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(3%, -3%, 0) scale(1.08); }
+}
+@keyframes lp-marquee {
+  to { transform: translateX(-50%); }
+}
+@keyframes lp-dash {
+  to { stroke-dashoffset: -24; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-mesh, .lp-marquee, .lp-dash { animation: none; }
+  .lp-strike { transition: none; }
+}
+
 /*
  * Phone safety net: many component toolbars are written as single-line flex rows.
  * On narrow screens let them wrap instead of pushing buttons off-screen, and let

@@ -29,6 +29,17 @@ function describeFailure(status: number, statusText: string, rawText: string, pa
   return trimmed.slice(0, 300) || `HTTP ${status} ${statusText}`.trim();
 }
 
+/** The server needs a sign-in (APP_PASSWORD is set and the session is missing or expired). */
+export const LOGIN_REQUIRED_EVENT = 'co-login-required';
+function noticeLoginRequired(status: number, parsed: any) {
+  if (status === 401 && parsed?.loginRequired) window.dispatchEvent(new Event(LOGIN_REQUIRED_EVENT));
+}
+
+/** An error worth retrying: the network dropped, or a gateway/host limit cut the request off. */
+class RetryableError extends Error {
+  readonly retryable = true;
+}
+
 export async function safeApiPost<T = any>(
   url: string,
   body: any,
@@ -64,6 +75,7 @@ export async function safeApiPost<T = any>(
         await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
         continue;
       }
+      noticeLoginRequired(response.status, parsed);
       throw new Error(describeFailure(response.status, response.statusText, rawText, parsed));
     } catch (err: any) {
       lastError =
@@ -86,19 +98,54 @@ export async function safeApiPost<T = any>(
   throw lastError || new Error(`Request to ${url} failed.`);
 }
 
+/** A run on a host with a short request limit (Vercel) takes a few requests; this caps a stuck run. */
+const MAX_PIPELINE_REQUESTS = 30;
+
 /**
  * Runs the orchestrator with live progress. The server streams NDJSON lines:
  * {"type":"progress","event":{...}} … then {"type":"result","result":{...}} or {"type":"error","error":"…"}.
+ * Where requests are time-limited, a request may instead end with {"type":"checkpoint","checkpoint":{...}};
+ * the run then continues in a new request from that checkpoint, so callers just see one long run.
  */
 export async function runPipelineStream<T = any>(
   body: any,
   onProgress: (event: PipelineProgressEvent) => void,
   options: { timeoutMs?: number; signal?: AbortSignal } = {}
 ): Promise<T> {
+  let resume: unknown;
+  let retries = 0;
+  for (let request = 1; request <= MAX_PIPELINE_REQUESTS; request++) {
+    let step: { result: T } | { checkpoint: unknown };
+    try {
+      step = await runPipelineRequest<T>({ ...body, resume }, onProgress, options);
+    } catch (err: any) {
+      // A dropped connection or a host time-out loses only the step in progress: continue from the last
+      // checkpoint (or start again if there is none yet), at most twice in a row.
+      if (err?.retryable && !options.signal?.aborted && retries < 2) {
+        retries++;
+        await new Promise((r) => setTimeout(r, 3000 * retries));
+        continue;
+      }
+      throw err;
+    }
+    retries = 0;
+    if ('result' in step) return step.result;
+    resume = step.checkpoint;
+  }
+  throw new Error(`The pipeline did not finish within ${MAX_PIPELINE_REQUESTS} requests.`);
+}
+
+async function runPipelineRequest<T>(
+  body: any,
+  onProgress: (event: PipelineProgressEvent) => void,
+  options: { timeoutMs?: number; signal?: AbortSignal }
+): Promise<{ result: T } | { checkpoint: unknown }> {
   const controller = new AbortController();
   const timeoutMs = options.timeoutMs ?? 15 * 60 * 1000;
   const timer = setTimeout(() => controller.abort(), timeoutMs);
-  options.signal?.addEventListener('abort', () => controller.abort());
+  const onAbort = () => controller.abort();
+  if (options.signal?.aborted) controller.abort();
+  options.signal?.addEventListener('abort', onAbort);
 
   try {
     const response = await fetch('/api/run-pipeline', {
@@ -117,13 +164,16 @@ export async function runPipelineStream<T = any>(
       } catch {
         /* not JSON */
       }
-      throw new Error(describeFailure(response.status, response.statusText, rawText, parsed));
+      noticeLoginRequired(response.status, parsed);
+      const message = describeFailure(response.status, response.statusText, rawText, parsed);
+      throw TRANSIENT_STATUS.has(response.status) ? new RetryableError(message) : new Error(message);
     }
 
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
     let result: T | null = null;
+    let checkpoint: unknown = null;
 
     const handleLine = (line: string) => {
       if (!line.trim()) return;
@@ -135,6 +185,7 @@ export async function runPipelineStream<T = any>(
       }
       if (msg.type === 'progress' && msg.event) onProgress(msg.event);
       else if (msg.type === 'result') result = msg.result as T;
+      else if (msg.type === 'checkpoint') checkpoint = msg.checkpoint;
       else if (msg.type === 'error') throw new Error(msg.error || 'Pipeline failed');
     };
 
@@ -150,14 +201,18 @@ export async function runPipelineStream<T = any>(
     }
     handleLine(buffer);
 
-    if (!result) throw new Error('The pipeline ended without returning a result.');
-    return result;
+    if (result) return { result };
+    if (checkpoint) return { checkpoint };
+    throw new Error('The pipeline ended without returning a result.');
   } catch (err: any) {
     if (err?.name === 'AbortError') {
       throw new Error(options.signal?.aborted ? 'Pipeline run cancelled.' : 'Pipeline run timed out.');
     }
+    // fetch() and stream reads throw TypeError when the connection drops.
+    if (err instanceof TypeError) throw new RetryableError(`The connection dropped (${err.message}).`);
     throw err;
   } finally {
     clearTimeout(timer);
+    options.signal?.removeEventListener('abort', onAbort);
   }
 }

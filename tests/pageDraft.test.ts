@@ -33,6 +33,33 @@ test('coerces model output, splitting "a | b" table rows', () => {
   assert.equal(coercePageDraft({ h1: '', sections: [] }), null);
 });
 
+test('an FAQ written as an H2 section becomes the FAQ list (rendered last)', () => {
+  const d = coercePageDraft({
+    h1: 'Fixed Deposit',
+    intro: ['Open an FD online.'],
+    sections: [
+      { h2: 'Benefits', paragraphs: ['Fixed returns.'] },
+      { h2: 'Frequently Asked Questions', paragraphs: [], h3s: [{ h3: 'What is an FD?', paragraphs: ['A deposit for a fixed term.'] }] },
+      { h2: 'How to apply', paragraphs: ['Apply online.'] },
+    ],
+    faqs: [{ question: 'Is it safe?', answer: 'It is rated AAA.' }],
+  })!;
+  assert.deepEqual(d.sections.map((s) => s.h2), ['Benefits', 'How to apply']);
+  assert.deepEqual(d.faqs.map((f) => f.question), ['Is it safe?', 'What is an FD?']);
+  assert.deepEqual(checkHeadingStructure(draftToMarkdown(d)), []);
+
+  const inline = coercePageDraft({
+    h1: 'Insta EMI Card',
+    sections: [
+      { h2: 'Fees', paragraphs: ['Joining fee Rs. 530.'] },
+      { h2: 'Frequently Asked Questions', paragraphs: ['Below are common questions.'], bullets: ['Is Bajaj Pay Wallet required? Yes, for cashbacks.', 'What is the joining fee? Rs. 530.'] },
+    ],
+    faqs: [{ question: 'What is the joining fee?', answer: 'Rs. 530 including taxes.' }],
+  })!;
+  assert.deepEqual(inline.sections.map((s) => s.h2), ['Fees']);
+  assert.deepEqual(inline.faqs.map((f) => f.question), ['What is the joining fee?', 'Is Bajaj Pay Wallet required?']);
+});
+
 test('heading structure: draft markdown is clean; violations are flagged', () => {
   assert.deepEqual(checkHeadingStructure(draftToMarkdown(draft)), []);
   const ids = checkHeadingStructure('## Intro\n\n# Title\n\n#### Deep\n\n## FAQs\n\n### Q?\n\n## Contact').map((f) => f.id).sort();

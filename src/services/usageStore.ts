@@ -24,6 +24,8 @@ export type LlmErrorType =
   | 'network'
   | 'bad_output'
   | 'too_large'
+  /** Stopped at the step deadline (Vercel time limit); the step is retried in the next request. */
+  | 'deadline'
   | 'other';
 
 export interface LlmCallEvent {
@@ -72,7 +74,11 @@ export interface RunEvent {
   error?: string;
 }
 
-const dir = () => process.env.USAGE_LOG_DIR || path.join(process.cwd(), 'data', 'usage');
+// Vercel functions can only write to /tmp, which is wiped whenever an instance is recycled,
+// so on Vercel the admin panel only shows recent activity.
+const dir = () =>
+  process.env.USAGE_LOG_DIR ||
+  (process.env.VERCEL === '1' ? '/tmp/content-optimizer-usage' : path.join(process.cwd(), 'data', 'usage'));
 let enabled = process.env.USAGE_LOGGING !== 'off';
 
 export function setUsageLogging(on: boolean) {

@@ -186,6 +186,23 @@ export function createMessagePacket(params: {
 /**
  * Deterministic Anti-Hallucination & Policy Verification Utility
  */
+/**
+ * True when the text uses a forbidden phrase as a statement, not inside a negation. Presets forbid claims such
+ * as "insured by DICGC" while requiring the disclosure "deposits with NBFCs are not insured by DICGC"; a plain
+ * substring match blocked every compliant Fixed Deposit draft in the first real test.
+ */
+export function usesPhraseAffirmatively(text: string, phrase: string): boolean {
+  const t = text.toLowerCase();
+  const p = phrase.toLowerCase().trim();
+  if (!p) return false;
+  const negation = /\b(not|never|isn't|aren't|wasn't|weren't|cannot|can't|neither|nor)\b/;
+  for (let i = t.indexOf(p); i >= 0; i = t.indexOf(p, i + p.length)) {
+    const before = t.slice(Math.max(0, i - 40), i).split(/\s+/).slice(-4).join(' ');
+    if (!negation.test(before)) return true;
+  }
+  return false;
+}
+
 export function runDeterministicAntiHallucinationChecks(params: {
   text: string;
   forbiddenPhrases?: string[];
@@ -206,7 +223,7 @@ export function runDeterministicAntiHallucinationChecks(params: {
 
   // 1. Check for forbidden phrases
   for (const phrase of forbiddenPhrases) {
-    if (phrase && phrase.trim() && textLower.includes(phrase.toLowerCase().trim())) {
+    if (phrase && phrase.trim() && usesPhraseAffirmatively(textLower, phrase)) {
       forbiddenWordsFound.push(phrase);
       violations.push(`Contains forbidden phrase: "${phrase}"`);
     }

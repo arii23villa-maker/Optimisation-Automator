@@ -49,7 +49,11 @@ const NOISE = new Set(
   ).split(/\s+/)
 );
 
-const QUESTION_START = /^(what|how|why|when|where|which|who|can|is|are|does|do|should|will)\b/i;
+// Words that need what follows them ("based on", "according to"): a phrase ending in one is a fragment.
+// Found in the real test (2026-10-21): "personal loan based" was picked and the maker was told to use it.
+const ENDS_OPEN = new Set('based depending according due subject related compared regardless including owing prior instead rather'.split(' '));
+
+const QUESTION_START =/^(what|how|why|when|where|which|who|can|is|are|does|do|should|will)\b/i;
 
 const norm = (s: string) =>
   s
@@ -70,7 +74,7 @@ function phrasesOf(text: string, minN = 1, maxN = 4): string[] {
     for (let n = minN; n <= maxN; n++) {
       for (let i = 0; i + n <= w.length; i++) {
         const gram = w.slice(i, i + n);
-        if (STOP.has(gram[0]) || STOP.has(gram[gram.length - 1])) continue;
+        if (STOP.has(gram[0]) || STOP.has(gram[gram.length - 1]) || ENDS_OPEN.has(gram[gram.length - 1])) continue;
         if (gram.some((t) => t.length < 2 && !/\d/.test(t))) continue;
         if (gram.every((t) => NOISE.has(t) || /^\d+$/.test(t))) continue;
         out.push(gram.join(' '));

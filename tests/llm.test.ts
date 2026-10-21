@@ -14,8 +14,9 @@ process.env.GEMINI_API_KEY = '';
 process.env.API_KEY = '';
 process.env.GOOGLE_API_KEY = '';
 process.env.GROQ_TPM_LIMIT = '8000';
+process.env.LLM_OVERLOAD_WAIT_MS = '20';
 
-const { generate, extractJson, priceFor, resetRouterState } = await import('../src/services/llm');
+const { generate, extractJson, priceFor, resetRouterState, runContext, isDeadlineError, routeFor, geminiConfig } = await import('../src/services/llm');
 const { readEvents } = await import('../src/services/usageStore');
 const { computeAdminMetrics } = await import('../src/services/adminMetrics');
 
@@ -102,6 +103,83 @@ test('permission errors pause the model', async () => {
   const before = seenModels.filter((m) => m === 'openai/gpt-oss-20b').length;
   await assert.rejects(generate({ job: 'keywords', prompt: 'JSON' }));
   assert.equal(seenModels.filter((m) => m === 'openai/gpt-oss-20b').length, before, 'paused model not called again');
+});
+
+test('a model that keeps failing goes to the back of the line for the next calls', async () => {
+  replies['openai/gpt-oss-120b'] = [{ status: 503, body: {} }, { status: 503, body: {} }];
+  replies['openai/gpt-oss-20b'] = [ok('{"a":1}'), ok('{"a":2}')];
+  await generate({ job: 'gate-compliance', prompt: 'JSON', json: true });
+  seenModels = [];
+  const r = await generate({ job: 'gate-compliance', prompt: 'JSON', json: true });
+  assert.equal(r.model, 'openai/gpt-oss-20b');
+  assert.deepEqual(seenModels, ['openai/gpt-oss-20b'], 'the failing model was not tried first');
+});
+
+test('when every model is briefly overloaded, the router waits and tries the list once more', async () => {
+  const busy = { status: 503, body: { error: { message: 'high demand' } } };
+  replies['openai/gpt-oss-120b'] = [busy, busy, ok('{"a":1}')];
+  replies['openai/gpt-oss-20b'] = [busy, busy];
+  const r = await generate({ job: 'keywords', prompt: 'JSON', json: true });
+  assert.equal(r.model, 'openai/gpt-oss-120b');
+  assert.equal(seenModels.length, 5);
+});
+
+test('a daily quota pauses the model instead of waiting and retrying', async () => {
+  const daily = { status: 429, body: { error: { message: 'Rate limit reached on requests per day (RPD): Limit 1000. Please try again in 7h.' } } };
+  replies['openai/gpt-oss-120b'] = [daily];
+  replies['openai/gpt-oss-20b'] = [ok('{"a":1}'), ok('{"a":2}')];
+  await generate({ job: 'keywords', prompt: 'JSON', json: true });
+  seenModels = [];
+  const r = await generate({ job: 'keywords', prompt: 'JSON', json: true });
+  assert.equal(r.model, 'openai/gpt-oss-20b');
+  assert.deepEqual(seenModels, ['openai/gpt-oss-20b'], 'the exhausted model is not called again');
+});
+
+test('review checks wait one round for Groq before spending Gemini quota', async () => {
+  process.env.GEMINI_API_KEY = 'test-gemini-key';
+  try {
+    const tpm = { status: 429, body: { error: { message: 'Rate limit reached on tokens per minute (TPM): Limit 8000. Please try again in 30s.' } } };
+    replies['openai/gpt-oss-120b'] = [tpm, ok('[]')];
+    replies['openai/gpt-oss-20b'] = [tpm];
+    const r = await generate({ job: 'gate-compliance', prompt: 'JSON', json: true });
+    assert.equal(r.model, 'openai/gpt-oss-120b', 'Groq answered after the wait; Gemini was never called');
+  } finally {
+    process.env.GEMINI_API_KEY = '';
+  }
+});
+
+test('an avoided model (the draft writer, for the fact check) is tried last', async () => {
+  replies['openai/gpt-oss-20b'] = [ok('{"a":1}')];
+  const r = await generate({ job: 'keywords', prompt: 'JSON', json: true, avoidModels: ['groq:openai/gpt-oss-120b'] });
+  assert.equal(r.model, 'openai/gpt-oss-20b');
+  assert.deepEqual(seenModels, ['openai/gpt-oss-20b'], 'the avoided model was not asked first');
+});
+
+test('a call is not started when the step deadline is too close', async () => {
+  replies['openai/gpt-oss-120b'] = [ok('{"a":1}')];
+  await assert.rejects(
+    runContext.run({ runId: 't', deadline: Date.now() + 3_000 }, () => generate({ job: 'keywords', prompt: 'JSON', json: true })),
+    (e: any) => isDeadlineError(e)
+  );
+  assert.equal(seenModels.length, 0, 'nothing was sent');
+});
+
+test('writing jobs chain the free Gemini models; checks overflow to Gemini only after Groq', () => {
+  assert.deepEqual(routeFor('maker').map((c) => c.model), ['gemini-2.5-flash', 'gemini-3.1-flash-lite', 'gemma-4-31b-it', 'gemini-3.8-flash', 'openai/gpt-oss-120b']);
+  assert.deepEqual(routeFor('gate-compliance').map((c) => c.model), ['openai/gpt-oss-120b', 'openai/gpt-oss-20b', 'gemini-3.1-flash-lite', 'gemma-4-31b-it', 'gemini-2.5-flash']);
+  process.env.GEMINI_MODELS = 'gemini-3.8-flash';
+  try {
+    assert.deepEqual(routeFor('maker').map((c) => c.model), ['gemini-3.8-flash', 'openai/gpt-oss-120b']);
+  } finally {
+    delete process.env.GEMINI_MODELS;
+  }
+});
+
+test('2.5 models keep half of a large output budget for the answer (thinking counts against it)', () => {
+  assert.deepEqual(geminiConfig('gemini-2.5-flash', { json: true, maxOutputTokens: 32768 }).thinkingConfig, { thinkingBudget: 16384 });
+  assert.equal(geminiConfig('gemini-2.5-flash', { maxOutputTokens: 2048 }).thinkingConfig, undefined, 'short checks keep the default');
+  assert.equal(geminiConfig('gemini-3.1-flash-lite', { maxOutputTokens: 32768 }).thinkingConfig, undefined, 'other models unchanged');
+  assert.equal(geminiConfig('gemma-4-31b-it', { maxOutputTokens: 32768 }).thinkingConfig, undefined);
 });
 
 test('metrics aggregate calls, rate limits and failures', async () => {
